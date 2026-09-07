@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 public struct ContentView: View {
     @StateObject private var cursorManager = SystemCursorManager.shared
     @ObservedObject private var libraryManager = SchemeLibraryManager.shared
+    @ObservedObject private var langManager = LanguageManager.shared
     @AppStorage("WinToMacCursor_RestoreOnQuit") private var restoreOnQuit: Bool = false
 
     @State private var statusMessage: String? = nil
@@ -21,6 +22,7 @@ public struct ContentView: View {
         } detail: {
             cursorDetailView
         }
+        .navigationTitle(L10n.tr("app_title"))
         .frame(minWidth: 960, minHeight: 620)
         .toolbar {
             toolbarItems
@@ -32,13 +34,19 @@ public struct ContentView: View {
                 toastView(message: err, isError: true)
             }
         }
+        .onAppear {
+            langManager.updateAllWindowsTitle()
+        }
+        .onChange(of: langManager.selectedLanguageRaw) { _, _ in
+            langManager.updateAllWindowsTitle()
+        }
     }
 
     // MARK: - Sidebar
     private var sidebarView: some View {
         VStack(spacing: 0) {
             List(selection: $libraryManager.selectedSchemeIndex) {
-                Section(header: Text("光标方案库 (Themes)")) {
+                Section(header: Text(L10n.tr("sidebar_section_title"))) {
                     ForEach(libraryManager.schemes.indices, id: \.self) { idx in
                         let scheme = libraryManager.schemes[idx]
                         HStack {
@@ -48,7 +56,7 @@ public struct ContentView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(scheme.name)
                                     .font(.system(size: 13, weight: .medium))
-                                Text("\(scheme.items.count) 项光标")
+                                Text(L10n.tr("scheme_items_count", scheme.items.count))
                                     .font(.caption2)
                                     .foregroundColor(.secondary)
                             }
@@ -58,9 +66,9 @@ public struct ContentView: View {
                         .contextMenu {
                             Button(role: .destructive) {
                                 libraryManager.deleteScheme(at: idx)
-                                showToast("已从方案库中移除【\(scheme.name)】")
+                                showToast(L10n.tr("delete_scheme_toast", scheme.name))
                             } label: {
-                                Label("从方案库中删除", systemImage: "trash")
+                                Label(L10n.tr("delete_scheme"), systemImage: "trash")
                             }
                         }
                     }
@@ -72,7 +80,7 @@ public struct ContentView: View {
 
             // Import Button
             Button(action: promptImportDirectory) {
-                Label("导入文件夹 / .cur / .ani...", systemImage: "folder.badge.plus")
+                Label(L10n.tr("import_button"), systemImage: "folder.badge.plus")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
@@ -85,14 +93,14 @@ public struct ContentView: View {
                     .frame(width: 8, height: 8)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(cursorManager.isCustomApplied ? "当前状态: 自定义光标已生效" : "当前状态: 系统默认光标")
+                    Text(cursorManager.isCustomApplied ? L10n.tr("status_custom_active") : L10n.tr("status_system_default"))
                         .font(.system(size: 11, weight: .medium))
                     if let last = cursorManager.lastAppliedSchemeName {
-                        Text("已应用: \(last)")
+                        Text(L10n.tr("status_applied_scheme", last))
                             .font(.system(size: 9))
                             .foregroundColor(.secondary)
                     } else {
-                        Text("支持在顶部菜单栏快速切换")
+                        Text(L10n.tr("status_menu_bar_hint"))
                             .font(.system(size: 9))
                             .foregroundColor(.secondary)
                     }
@@ -118,7 +126,7 @@ public struct ContentView: View {
                                 Text(currentScheme.name)
                                     .font(.headline)
                                 if currentScheme.isAnimatedScheme {
-                                    Text("动态 ANI 方案")
+                                    Text(L10n.tr("animated_scheme_badge"))
                                         .font(.caption2)
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
@@ -126,7 +134,7 @@ public struct ContentView: View {
                                         .foregroundColor(.orange)
                                         .cornerRadius(4)
                                 } else {
-                                    Text("静态 CUR 方案")
+                                    Text(L10n.tr("static_scheme_badge"))
                                         .font(.caption2)
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
@@ -135,7 +143,7 @@ public struct ContentView: View {
                                         .cornerRadius(4)
                                 }
                             }
-                            Text("共包含 \(currentScheme.items.count) 种光标，支持适配 macOS 系统核心状态")
+                            Text(L10n.tr("scheme_summary", currentScheme.items.count))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -156,7 +164,7 @@ public struct ContentView: View {
                     .listStyle(.inset)
                 }
             } else {
-                Text("暂无选中的光标方案")
+                Text(L10n.tr("no_scheme_selected"))
                     .foregroundColor(.secondary)
             }
         }
@@ -174,7 +182,7 @@ public struct ContentView: View {
                     Image(systemName: "cursorarrow.click")
                         .font(.system(size: 48))
                         .foregroundColor(.secondary.opacity(0.5))
-                    Text("请在左侧列表中选择一个光标进行预览与试用")
+                    Text(L10n.tr("select_cursor_prompt"))
                         .font(.headline)
                         .foregroundColor(.secondary)
                 }
@@ -187,40 +195,59 @@ public struct ContentView: View {
     @ToolbarContentBuilder
     private var toolbarItems: some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
+            // Language Picker Menu
+            Menu {
+                ForEach(AppLanguage.allCases) { lang in
+                    Button {
+                        langManager.selectedLanguage = lang
+                    } label: {
+                        HStack {
+                            Text(lang.displayName)
+                            if langManager.selectedLanguage == lang {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                Label(L10n.tr("language_menu"), systemImage: "globe")
+            }
+            .help(L10n.tr("language_menu"))
+
             // Restore on Quit option
-            Toggle("退出时恢复默认", isOn: $restoreOnQuit)
+            Toggle(L10n.tr("restore_on_quit"), isOn: $restoreOnQuit)
                 .toggleStyle(.checkbox)
                 .font(.caption)
-                .help("完全退出 App 时自动将鼠标复原为系统原生默认指针")
+                .help(L10n.tr("restore_on_quit_help"))
 
             // Apply Button
             Button(action: applyCurrentScheme) {
-                Label("一键更换 (Apply)", systemImage: "bolt.fill")
+                Label(L10n.tr("btn_apply"), systemImage: "bolt.fill")
             }
             .buttonStyle(.borderedProminent)
             .tint(.accentColor)
-            .help("立即将当前方案应用到 macOS 系统光标")
+            .help(L10n.tr("btn_apply_help"))
 
             // Restore Button
             Button(action: restoreSystemDefaults) {
-                Label("一键恢复 (Restore)", systemImage: "arrow.counterclockwise")
+                Label(L10n.tr("btn_restore"), systemImage: "arrow.counterclockwise")
             }
             .buttonStyle(.bordered)
-            .help("一键恢复 macOS 原生默认光标")
+            .help(L10n.tr("btn_restore_help"))
 
             // Export .cape Button
             Button(action: promptExportCape) {
-                Label("导出 .cape 文件", systemImage: "square.and.arrow.up")
+                Label(L10n.tr("btn_export_cape"), systemImage: "square.and.arrow.up")
             }
             .buttonStyle(.bordered)
-            .help("导出为 macOS 专用的 .cape 光标主题包")
+            .help(L10n.tr("btn_export_cape_help"))
 
             // Export Assets Button
             Button(action: promptExportAssets) {
-                Label("导出素材包", systemImage: "photo.on.rectangle")
+                Label(L10n.tr("btn_export_assets"), systemImage: "photo.on.rectangle")
             }
             .buttonStyle(.bordered)
-            .help("导出各光标的 PNG 图片与动图帧")
+            .help(L10n.tr("btn_export_assets_help"))
         }
     }
 
@@ -235,14 +262,14 @@ public struct ContentView: View {
         panel.canChooseFiles = true
         panel.allowsMultipleSelection = false
         panel.allowedContentTypes = [UTType.folder, UTType(filenameExtension: "cur")!, UTType(filenameExtension: "ani")!]
-        panel.message = "选择包含 Windows 光标（.cur / .ani）的文件夹或文件"
+        panel.message = L10n.tr("open_panel_message")
 
         if panel.runModal() == .OK, let url = panel.url {
             do {
                 let imported = try libraryManager.importScheme(from: url)
-                showToast("成功导入并存入方案库【\(imported.name)】（共 \(imported.items.count) 项光标）！")
+                showToast(L10n.tr("import_success_toast", imported.name, imported.items.count))
             } catch {
-                showError("导入失败: \(error.localizedDescription)")
+                showError(L10n.tr("import_fail_error", error.localizedDescription))
             }
         }
     }
@@ -251,18 +278,18 @@ public struct ContentView: View {
         guard let scheme = activeScheme else { return }
         let (success, total) = cursorManager.applyScheme(scheme)
         if success > 0 {
-            showToast("已成功更换系统光标！\(success)/\(total) 个系统状态已激活生效。")
+            showToast(L10n.tr("apply_success_toast", success, total))
         } else {
-            showError("更换系统光标失败，可能受限于当前系统环境权限。已支持导出 .cape 配合 Mousecape 使用。")
+            showError(L10n.tr("apply_fail_error"))
         }
     }
 
     private func restoreSystemDefaults() {
         let ok = cursorManager.restoreDefaults()
         if ok {
-            showToast("已成功恢复 macOS 原生默认光标！")
+            showToast(L10n.tr("restore_success_toast"))
         } else {
-            showError("未能完全恢复默认光标，可尝试在【系统设置 > 辅助功能 > 显示 > 指针】中重置。")
+            showError(L10n.tr("restore_fail_error"))
         }
     }
 
@@ -271,14 +298,14 @@ public struct ContentView: View {
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [UTType(filenameExtension: "cape") ?? .data]
         savePanel.nameFieldStringValue = "\(scheme.name).cape"
-        savePanel.message = "选择导出 .cape 文件的保存位置"
+        savePanel.message = L10n.tr("save_cape_message")
 
         if savePanel.runModal() == .OK, let destination = savePanel.url {
             do {
                 try CapeGenerator.exportCape(from: scheme, to: destination)
-                showToast("已成功导出【\(destination.lastPathComponent)】！双击即可在 macOS 中直接使用。")
+                showToast(L10n.tr("export_cape_success_toast", destination.lastPathComponent))
             } catch {
-                showError("导出失败: \(error.localizedDescription)")
+                showError(L10n.tr("export_cape_fail_error", error.localizedDescription))
             }
         }
     }
@@ -289,8 +316,8 @@ public struct ContentView: View {
         openPanel.canChooseDirectories = true
         openPanel.canChooseFiles = false
         openPanel.canCreateDirectories = true
-        openPanel.prompt = "导出到此文件夹"
-        openPanel.message = "选择导出图片素材的目标文件夹"
+        openPanel.prompt = L10n.tr("export_assets_prompt")
+        openPanel.message = L10n.tr("export_assets_message")
 
         if openPanel.runModal() == .OK, let targetDir = openPanel.url {
             do {
@@ -323,9 +350,9 @@ public struct ContentView: View {
                         try png.write(to: fileURL)
                     }
                 }
-                showToast("已成功导出方案图片素材至【\(schemeDir.lastPathComponent)】！")
+                showToast(L10n.tr("export_assets_success_toast", schemeDir.lastPathComponent))
             } catch {
-                showError("导出素材失败: \(error.localizedDescription)")
+                showError(L10n.tr("export_assets_fail_error", error.localizedDescription))
             }
         }
     }

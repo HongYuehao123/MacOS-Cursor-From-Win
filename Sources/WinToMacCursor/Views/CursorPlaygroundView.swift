@@ -3,6 +3,7 @@ import SwiftUI
 
 public struct CursorPlaygroundView: View {
     @ObservedObject var item: CursorItem
+    @ObservedObject private var langManager = LanguageManager.shared
     @State private var clickCount: Int = 0
     @State private var lastClickPoint: CGPoint? = nil
 
@@ -13,11 +14,11 @@ public struct CursorPlaygroundView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Label("鼠标试用体验画板 (Playground)", systemImage: "cursorarrow.rays")
+                Label(L10n.tr("playground_title"), systemImage: "cursorarrow.rays")
                     .font(.headline)
                 Spacer()
                 if clickCount > 0 {
-                    Text("测试点击次数: \(clickCount)")
+                    Text(L10n.tr("playground_clicks", clickCount))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -40,10 +41,10 @@ public struct CursorPlaygroundView: View {
                     Image(systemName: "hand.tap")
                         .font(.title2)
                         .foregroundColor(.secondary)
-                    Text("把鼠标移入此区域，即可即时体验【\(item.name)】的手感与点击对准度")
+                    Text(L10n.tr("playground_hover_hint", item.name))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                    Text("点击此区域可测试准星对齐效果")
+                    Text(L10n.tr("playground_align_hint"))
                         .font(.caption2)
                         .foregroundColor(.secondary.opacity(0.8))
                 }

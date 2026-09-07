@@ -25,24 +25,24 @@ public enum CursorRole: String, CaseIterable, Identifiable, Sendable {
 
     public var localizedName: String {
         switch self {
-        case .arrow: return "正常选择 (Normal)"
-        case .help: return "帮助选择 (Help)"
-        case .working: return "后台工作 (Working)"
-        case .busy: return "忙碌等待 (Busy)"
-        case .precision: return "精确定位 (Precision)"
-        case .text: return "文本选择 (Text/IBeam)"
-        case .handwriting: return "手写输入 (Handwriting)"
-        case .unavailable: return "禁止/不可用 (Unavailable)"
-        case .vertical: return "垂直缩放 (Vertical)"
-        case .horizontal: return "水平缩放 (Horizontal)"
-        case .diagonal1: return "对角缩放 1 (Diagonal 1)"
-        case .diagonal2: return "对角缩放 2 (Diagonal 2)"
-        case .move: return "移动 (Move)"
-        case .alternate: return "候选选择 (Alternate)"
-        case .link: return "链接选择 (Link/Hand)"
-        case .person: return "人员/定位 (Person)"
-        case .pin: return "图钉/标记 (Pin)"
-        case .custom: return "自定义光标 (Custom)"
+        case .arrow: return L10n.tr("role_arrow")
+        case .help: return L10n.tr("role_help")
+        case .working: return L10n.tr("role_working")
+        case .busy: return L10n.tr("role_busy")
+        case .precision: return L10n.tr("role_precision")
+        case .text: return L10n.tr("role_text")
+        case .handwriting: return L10n.tr("role_handwriting")
+        case .unavailable: return L10n.tr("role_unavailable")
+        case .vertical: return L10n.tr("role_vertical")
+        case .horizontal: return L10n.tr("role_horizontal")
+        case .diagonal1: return L10n.tr("role_diagonal1")
+        case .diagonal2: return L10n.tr("role_diagonal2")
+        case .move: return L10n.tr("role_move")
+        case .alternate: return L10n.tr("role_alternate")
+        case .link: return L10n.tr("role_link")
+        case .person: return L10n.tr("role_person")
+        case .pin: return L10n.tr("role_pin")
+        case .custom: return L10n.tr("role_custom")
         }
     }
 

@@ -38,6 +38,14 @@ if [ -f "${ROOT_DIR}/Resources/DefaultMacCursor.cape" ]; then
     cp "${ROOT_DIR}/Resources/DefaultMacCursor.cape" "${RESOURCES}/DefaultMacCursor.cape"
 fi
 
+# Bundle localization resources (.lproj)
+echo "==> Bundling localization resources..."
+for lproj in "${ROOT_DIR}/Resources"/*.lproj; do
+    if [ -d "${lproj}" ]; then
+        cp -R "${lproj}" "${RESOURCES}/"
+    fi
+done
+
 # Bundle default themes into app resources
 mkdir -p "${RESOURCES}/DefaultThemes"
 cp -R "${ROOT_DIR}/Test/Minori Cursor animation" "${RESOURCES}/DefaultThemes/"
@@ -51,7 +59,13 @@ cat << 'EOF' > "${CONTENTS}/Info.plist"
 <plist version="1.0">
 <dict>
     <key>CFBundleDevelopmentRegion</key>
-    <string>zh_CN</string>
+    <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>zh-Hans</string>
+        <string>zh_CN</string>
+    </array>
     <key>CFBundleExecutable</key>
     <string>WinToMacCursor</string>
     <key>CFBundleIconFile</key>

@@ -24,7 +24,7 @@ public final class StatusBarManager: NSObject, NSMenuDelegate {
                 image.isTemplate = true
                 button.image = image
             }
-            button.toolTip = "WinToMacCursor - 鼠标方案快速切换"
+            button.toolTip = L10n.tr("status_bar_tooltip")
         }
 
         menu.delegate = self
@@ -36,6 +36,9 @@ public final class StatusBarManager: NSObject, NSMenuDelegate {
 
     public func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
+        if let button = statusItem?.button {
+            button.toolTip = L10n.tr("status_bar_tooltip")
+        }
 
         let cursorManager = SystemCursorManager.shared
         let libraryManager = SchemeLibraryManager.shared
@@ -44,8 +47,8 @@ public final class StatusBarManager: NSObject, NSMenuDelegate {
 
         // 1. Status Header
         let statusTitle = isCustom
-            ? "● 当前光标: \(currentSchemeName ?? "已自定义")"
-            : "○ 当前光标: 系统默认"
+            ? L10n.tr("menu_status_custom", currentSchemeName ?? L10n.tr("menu_status_custom_fallback"))
+            : L10n.tr("menu_status_default")
         let statusItem = NSMenuItem(title: statusTitle, action: nil, keyEquivalent: "")
         statusItem.isEnabled = false
         menu.addItem(statusItem)
@@ -53,20 +56,26 @@ public final class StatusBarManager: NSObject, NSMenuDelegate {
         menu.addItem(NSMenuItem.separator())
 
         // 2. Section Header: Schemes
-        let schemesHeader = NSMenuItem(title: "快速切换光标方案:", action: nil, keyEquivalent: "")
+        let schemesHeader = NSMenuItem(title: L10n.tr("menu_schemes_header"), action: nil, keyEquivalent: "")
         schemesHeader.isEnabled = false
         menu.addItem(schemesHeader)
 
         let schemes = libraryManager.schemes
         if schemes.isEmpty {
-            let emptyItem = NSMenuItem(title: "  (方案库暂无方案，请打开主窗口导入)", action: nil, keyEquivalent: "")
+            let emptyItem = NSMenuItem(title: L10n.tr("menu_empty_schemes"), action: nil, keyEquivalent: "")
             emptyItem.isEnabled = false
             menu.addItem(emptyItem)
         } else {
             for scheme in schemes {
                 let isCurrent = isCustom && (currentSchemeName == scheme.name)
-                let typePrefix = scheme.isAnimatedScheme ? "✨ [动态]" : "🖱️ [静态]"
-                let itemTitle = "\(typePrefix) \(scheme.name) (\(scheme.items.count)项)"
+                let typePrefix = scheme.isAnimatedScheme ? L10n.tr("menu_animated_prefix") : L10n.tr("menu_static_prefix")
+                var cleanName = scheme.name
+                if cleanName.hasPrefix("[Static]") {
+                    cleanName = String(cleanName.dropFirst("[Static]".count)).trimmingCharacters(in: .whitespaces)
+                } else if cleanName.hasPrefix("[Animated]") {
+                    cleanName = String(cleanName.dropFirst("[Animated]".count)).trimmingCharacters(in: .whitespaces)
+                }
+                let itemTitle = L10n.tr("menu_scheme_item", typePrefix, cleanName, scheme.items.count)
 
                 let menuItem = NSMenuItem(title: itemTitle, action: #selector(schemeMenuItemClicked(_:)), keyEquivalent: "")
                 menuItem.target = self
@@ -80,7 +89,7 @@ public final class StatusBarManager: NSObject, NSMenuDelegate {
 
         // 3. Restore Defaults Action
         let restoreItem = NSMenuItem(
-            title: "↺ 一键恢复系统默认",
+            title: L10n.tr("menu_restore_defaults"),
             action: #selector(restoreDefaultsClicked(_:)),
             keyEquivalent: "r"
         )
@@ -92,7 +101,7 @@ public final class StatusBarManager: NSObject, NSMenuDelegate {
 
         // 4. Open Main Window
         let openWindowItem = NSMenuItem(
-            title: "🪟 打开主窗口...",
+            title: L10n.tr("menu_open_main_window"),
             action: #selector(openMainWindowClicked(_:)),
             keyEquivalent: "o"
         )
@@ -102,7 +111,7 @@ public final class StatusBarManager: NSObject, NSMenuDelegate {
 
         // 5. Quit App
         let quitItem = NSMenuItem(
-            title: "🚪 退出 WinToMacCursor",
+            title: L10n.tr("menu_quit"),
             action: #selector(quitAppClicked(_:)),
             keyEquivalent: "q"
         )

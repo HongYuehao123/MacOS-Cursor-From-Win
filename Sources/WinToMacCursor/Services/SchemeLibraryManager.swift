@@ -129,7 +129,7 @@ public final class SchemeLibraryManager: ObservableObject {
         var isDir: ObjCBool = false
         let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
         guard exists else {
-            throw NSError(domain: "WinToMacCursor", code: 404, userInfo: [NSLocalizedDescriptionKey: "所选路径不存在"])
+            throw NSError(domain: "WinToMacCursor", code: 404, userInfo: [NSLocalizedDescriptionKey: L10n.tr("path_not_exist")])
         }
 
         if isDir.boolValue {

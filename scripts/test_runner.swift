@@ -146,18 +146,63 @@ struct TestRunner {
         assertTrue(!containsDefaultInSidebar, "Native recovery scheme is strictly excluded from sidebar schemes list ('但是不要写在侧面')")
 
         // 6. Test StatusBarManager Menu Construction
-        print("\n--- [6/6] Testing StatusBarManager & Menu Bar Switcher ---")
+        print("\n--- [6/7] Testing StatusBarManager & Menu Bar Switcher ---")
         let statusManager = StatusBarManager.shared
         statusManager.setup()
         let testMenu = NSMenu()
         statusManager.menuNeedsUpdate(testMenu)
         assertTrue(testMenu.items.count >= 5, "StatusBar menu built successfully with \(testMenu.items.count) items")
-        let hasRestoreItem = testMenu.items.contains { $0.title.contains("恢复系统默认") }
-        assertTrue(hasRestoreItem, "StatusBar menu contains '恢复系统默认' item")
-        let hasOpenWindowItem = testMenu.items.contains { $0.title.contains("打开主窗口") }
-        assertTrue(hasOpenWindowItem, "StatusBar menu contains '打开主窗口' item")
-        let hasQuitItem = testMenu.items.contains { $0.title.contains("退出") }
-        assertTrue(hasQuitItem, "StatusBar menu contains '退出' item")
+        let hasRestoreItem = testMenu.items.contains { $0.title.contains("恢复") || $0.title.contains("Restore") }
+        assertTrue(hasRestoreItem, "StatusBar menu contains restore defaults item")
+        let hasOpenWindowItem = testMenu.items.contains { $0.title.contains("主窗口") || $0.title.contains("Main Window") }
+        assertTrue(hasOpenWindowItem, "StatusBar menu contains open main window item")
+        let hasQuitItem = testMenu.items.contains { $0.title.contains("退出") || $0.title.contains("Quit") }
+        assertTrue(hasQuitItem, "StatusBar menu contains quit item")
+
+        // 7. Test Multilingual Localization (i18n) System
+        print("\n--- [7/7] Testing Multilingual Localization (i18n) & Language Switching ---")
+        let langManager = LanguageManager.shared
+
+        // Test English localization
+        langManager.selectedLanguage = .english
+        assertTrue(!langManager.effectiveLanguageIsChinese, "LanguageManager set to English")
+        assertTrue(L10n.tr("app_title") == "WinToMacCursor", "English app title verified: \(L10n.tr("app_title"))")
+        assertTrue(CursorRole.arrow.localizedName == "Normal Select", "CursorRole.arrow English: \(CursorRole.arrow.localizedName)")
+        assertTrue(CursorRole.busy.localizedName == "Busy / Waiting", "CursorRole.busy English: \(CursorRole.busy.localizedName)")
+        assertTrue(L10n.tr("btn_apply") == "Apply", "English Apply button: \(L10n.tr("btn_apply"))")
+        assertTrue(L10n.tr("btn_restore") == "Restore Defaults", "English Restore button: \(L10n.tr("btn_restore"))")
+
+        // Verify status bar in English
+        let enMenu = NSMenu()
+        statusManager.menuNeedsUpdate(enMenu)
+        let enHasRestore = enMenu.items.contains { $0.title.contains("Restore System Defaults") }
+        let enHasOpen = enMenu.items.contains { $0.title.contains("Open Main Window") }
+        let enHasQuit = enMenu.items.contains { $0.title.contains("Quit WinToMacCursor") }
+        assertTrue(enHasRestore, "English menu contains 'Restore System Defaults'")
+        assertTrue(enHasOpen, "English menu contains 'Open Main Window'")
+        assertTrue(enHasQuit, "English menu contains 'Quit WinToMacCursor'")
+
+        // Test Chinese localization
+        langManager.selectedLanguage = .chinese
+        assertTrue(langManager.effectiveLanguageIsChinese, "LanguageManager set to Chinese")
+        assertTrue(L10n.tr("app_title") == "WinToMacCursor", "Chinese app title verified: \(L10n.tr("app_title"))")
+        assertTrue(CursorRole.arrow.localizedName == "正常选择 (Normal)", "CursorRole.arrow Chinese: \(CursorRole.arrow.localizedName)")
+        assertTrue(CursorRole.busy.localizedName == "忙碌等待 (Busy)", "CursorRole.busy Chinese: \(CursorRole.busy.localizedName)")
+        assertTrue(L10n.tr("btn_apply") == "一键更换 (Apply)", "Chinese Apply button: \(L10n.tr("btn_apply"))")
+        assertTrue(L10n.tr("btn_restore") == "一键恢复 (Restore)", "Chinese Restore button: \(L10n.tr("btn_restore"))")
+
+        // Verify status bar in Chinese
+        let zhMenu = NSMenu()
+        statusManager.menuNeedsUpdate(zhMenu)
+        let zhHasRestore = zhMenu.items.contains { $0.title.contains("一键恢复系统默认") }
+        let zhHasOpen = zhMenu.items.contains { $0.title.contains("打开主窗口") }
+        let zhHasQuit = zhMenu.items.contains { $0.title.contains("退出 WinToMacCursor") }
+        assertTrue(zhHasRestore, "Chinese menu contains '一键恢复系统默认'")
+        assertTrue(zhHasOpen, "Chinese menu contains '打开主窗口'")
+        assertTrue(zhHasQuit, "Chinese menu contains '退出 WinToMacCursor'")
+
+        // Reset to system default
+        langManager.selectedLanguage = .system
 
         // Clean up temporary test files
         try? FileManager.default.removeItem(at: tmpDir)

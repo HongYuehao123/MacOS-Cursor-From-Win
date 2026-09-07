@@ -9,8 +9,8 @@ public struct CapeGenerator {
         
         public var errorDescription: String? {
             switch self {
-            case .serializationFailed: return "无法将光标方案序列化为 .cape 属性列表"
-            case .emptyScheme: return "光标方案中没有可导出的光标"
+            case .serializationFailed: return L10n.tr("cape_err_serialization")
+            case .emptyScheme: return L10n.tr("cape_err_empty")
             }
         }
     }

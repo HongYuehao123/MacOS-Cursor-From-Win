@@ -3,6 +3,7 @@ import SwiftUI
 
 public struct CursorItemView: View {
     @ObservedObject var item: CursorItem
+    @ObservedObject private var langManager = LanguageManager.shared
     let isSelected: Bool
     @State private var currentFrameIndex: Int = 0
     @State private var timer: Timer?
@@ -38,10 +39,11 @@ public struct CursorItemView: View {
                 HStack(spacing: 6) {
                     Text(item.name)
                         .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.primary)
                         .lineLimit(1)
 
                     if item.isAnimated {
-                        Text("\(item.frames.count)帧动画")
+                        Text(L10n.tr("badge_animated", item.frames.count))
                             .font(.system(size: 10, weight: .bold))
                             .padding(.horizontal, 5)
                             .padding(.vertical, 1.5)
@@ -49,7 +51,7 @@ public struct CursorItemView: View {
                             .foregroundColor(.blue)
                             .cornerRadius(4)
                     } else {
-                        Text("静态")
+                        Text(L10n.tr("badge_static"))
                             .font(.system(size: 10, weight: .medium))
                             .padding(.horizontal, 5)
                             .padding(.vertical, 1.5)
@@ -65,11 +67,11 @@ public struct CursorItemView: View {
                     .lineLimit(1)
 
                 HStack(spacing: 8) {
-                    Text("热点: (\(Int(item.hotspot.x)), \(Int(item.hotspot.y)))")
+                    Text(L10n.tr("item_hotspot", Int(item.hotspot.x), Int(item.hotspot.y)))
                         .font(.system(size: 10))
                         .foregroundColor(.secondary.opacity(0.8))
 
-                    Text("尺寸: \(Int(item.size.width))×\(Int(item.size.height))")
+                    Text(L10n.tr("item_size", Int(item.size.width), Int(item.size.height)))
                         .font(.system(size: 10))
                         .foregroundColor(.secondary.opacity(0.8))
                 }
@@ -81,7 +83,11 @@ public struct CursorItemView: View {
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isSelected ? Color.accentColor.opacity(0.12) : Color.clear)
+                .fill(isSelected ? Color.accentColor.opacity(0.14) : Color.clear)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(isSelected ? Color.accentColor.opacity(0.4) : Color.clear, lineWidth: 1)
         )
         .contentShape(Rectangle())
         .onAppear {

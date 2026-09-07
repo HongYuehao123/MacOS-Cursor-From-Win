@@ -3,6 +3,7 @@ import SwiftUI
 
 public struct CursorDetailView: View {
     @ObservedObject var item: CursorItem
+    @ObservedObject private var langManager = LanguageManager.shared
     @State private var currentFrameIndex: Int = 0
     @State private var isPlaying: Bool = true
     @State private var speedMultiplier: Double = 1.0
@@ -11,11 +12,19 @@ public struct CursorDetailView: View {
     @State private var timer: Timer?
 
     public enum BackgroundMode: String, CaseIterable, Identifiable {
-        case checkerboard = "棋盘格"
-        case light = "纯白"
-        case dark = "纯黑"
+        case checkerboard = "checkerboard"
+        case light = "light"
+        case dark = "dark"
 
         public var id: String { rawValue }
+
+        public var displayName: String {
+            switch self {
+            case .checkerboard: return L10n.tr("bg_checkerboard")
+            case .light: return L10n.tr("bg_light")
+            case .dark: return L10n.tr("bg_dark")
+            }
+        }
     }
 
     public init(item: CursorItem) {
@@ -34,7 +43,7 @@ public struct CursorDetailView: View {
                                 .bold()
 
                             if item.isAnimated {
-                                Text("\(item.frames.count) 帧动画")
+                                Text(L10n.tr("frames_count_badge", item.frames.count))
                                     .font(.caption)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 3)
@@ -51,14 +60,16 @@ public struct CursorDetailView: View {
 
                     Spacer()
 
-                    // Background selector
-                    Picker("背景", selection: $backgroundMode) {
+                    // Background selector (hidden label removes unwanted '背景' text and prevents 160pt height inflation)
+                    Picker("", selection: $backgroundMode) {
                         ForEach(BackgroundMode.allCases) { mode in
-                            Text(mode.rawValue).tag(mode)
+                            Text(mode.displayName).tag(mode)
                         }
                     }
                     .pickerStyle(.segmented)
-                    .frame(width: 180)
+                    .labelsHidden()
+                    .frame(width: langManager.effectiveLanguageIsChinese ? 180 : 220)
+                    .id("bg_picker_\(langManager.selectedLanguageRaw)_\(langManager.effectiveLanguageIsChinese)")
                 }
 
                 // Magnified Visualizer
@@ -117,7 +128,7 @@ public struct CursorDetailView: View {
 
                     // Control & Specs Panel
                     VStack(alignment: .leading, spacing: 14) {
-                        Toggle("显示点击锚点 (Hotspot 准星)", isOn: $showHotspotMarker)
+                        Toggle(L10n.tr("show_hotspot_marker"), isOn: $showHotspotMarker)
                             .font(.subheadline)
 
                         Divider()
@@ -144,13 +155,13 @@ public struct CursorDetailView: View {
                                     .buttonStyle(.bordered)
                                     .disabled(isPlaying)
 
-                                    Text("帧: \(currentFrameIndex + 1) / \(item.frames.count)")
+                                    Text(L10n.tr("frame_step_label", currentFrameIndex + 1, item.frames.count))
                                         .font(.subheadline)
                                         .monospacedDigit()
                                 }
 
                                 HStack {
-                                    Text("播放速度: \(String(format: "%.1f", speedMultiplier))x")
+                                    Text(L10n.tr("playback_speed", speedMultiplier))
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                     Slider(value: $speedMultiplier, in: 0.25...3.0, step: 0.25)
@@ -165,11 +176,11 @@ public struct CursorDetailView: View {
 
                         // Technical Specs Grid
                         VStack(alignment: .leading, spacing: 6) {
-                            specRow(label: "源文件:", value: item.sourceFileName)
-                            specRow(label: "光标尺寸:", value: "\(Int(item.size.width)) × \(Int(item.size.height)) 像素")
-                            specRow(label: "点击锚点:", value: "X: \(Int(item.hotspot.x)), Y: \(Int(item.hotspot.y))")
+                            specRow(label: L10n.tr("spec_source_file"), value: item.sourceFileName)
+                            specRow(label: L10n.tr("spec_cursor_size"), value: L10n.tr("spec_cursor_size_val", Int(item.size.width), Int(item.size.height)))
+                            specRow(label: L10n.tr("spec_hotspot"), value: L10n.tr("spec_hotspot_val", Int(item.hotspot.x), Int(item.hotspot.y)))
                             if item.isAnimated {
-                                specRow(label: "单帧时长:", value: "\(String(format: "%.3f", item.frameRate)) 秒 (~ \(Int(round(1.0 / max(0.001, item.frameRate)))) FPS)")
+                                specRow(label: L10n.tr("spec_frame_duration"), value: L10n.tr("spec_frame_duration_val", item.frameRate, Int(round(1.0 / max(0.001, item.frameRate)))))
                             }
                         }
                     }
@@ -179,7 +190,7 @@ public struct CursorDetailView: View {
                 // Filmstrip (for animated cursors)
                 if item.isAnimated && item.frames.count > 1 {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("动画序列帧列表 (\(item.frames.count) 帧)")
+                        Text(L10n.tr("filmstrip_title", item.frames.count))
                             .font(.headline)
 
                         ScrollView(.horizontal, showsIndicators: true) {
@@ -222,7 +233,7 @@ public struct CursorDetailView: View {
 
                 // Mapped macOS Identifiers
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("适配的 macOS 系统光标标识符 (System Mappings)")
+                    Text(L10n.tr("system_mappings_title"))
                         .font(.headline)
 
                     FlowLayout(spacing: 6) {
@@ -285,7 +296,7 @@ public struct CursorDetailView: View {
             Text(label)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-                .frame(width: 80, alignment: .leading)
+                .frame(width: langManager.effectiveLanguageIsChinese ? 80 : 115, alignment: .leading)
             Text(value)
                 .font(.subheadline)
                 .monospacedDigit()

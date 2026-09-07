@@ -1,0 +1,117 @@
+/* Simplified Chinese Localizable.strings */
+"app_title" = "WinToMacCursor";
+
+/* Sidebar */
+"sidebar_section_title" = "光标方案库 (Themes)";
+"scheme_items_count" = "%d 项光标";
+"delete_scheme" = "从方案库中删除";
+"delete_scheme_toast" = "已从方案库中移除【%@】";
+"import_button" = "导入文件夹 / .cur / .ani...";
+"status_custom_active" = "当前状态: 自定义光标已生效";
+"status_system_default" = "当前状态: 系统默认光标";
+"status_applied_scheme" = "已应用: %@";
+"status_menu_bar_hint" = "支持在顶部菜单栏快速切换";
+
+/* Cursor List */
+"animated_scheme_badge" = "动态 ANI 方案";
+"static_scheme_badge" = "静态 CUR 方案";
+"scheme_summary" = "共包含 %d 种光标，支持适配 macOS 系统核心状态";
+"no_scheme_selected" = "暂无选中的光标方案";
+"select_cursor_prompt" = "请在左侧列表中选择一个光标进行预览与试用";
+
+/* Toolbar */
+"restore_on_quit" = "退出时恢复默认";
+"restore_on_quit_help" = "完全退出 App 时自动将鼠标复原为系统原生默认指针";
+"btn_apply" = "一键更换 (Apply)";
+"btn_apply_help" = "立即将当前方案应用到 macOS 系统光标";
+"btn_restore" = "一键恢复 (Restore)";
+"btn_restore_help" = "一键恢复 macOS 原生默认光标";
+"btn_export_cape" = "导出 .cape 文件";
+"btn_export_cape_help" = "导出为 macOS 专用的 .cape 光标主题包";
+"btn_export_assets" = "导出素材包";
+"btn_export_assets_help" = "导出各光标的 PNG 图片与动图帧";
+"language_menu" = "语言 (Language)";
+
+/* Actions & Dialogs */
+"open_panel_message" = "选择包含 Windows 光标（.cur / .ani）的文件夹或文件";
+"import_success_toast" = "成功导入并存入方案库【%@】（共 %d 项光标）！";
+"import_fail_error" = "导入失败: %@";
+"path_not_exist" = "所选路径不存在";
+"apply_success_toast" = "已成功更换系统光标！%d/%d 个系统状态已激活生效。";
+"apply_fail_error" = "更换系统光标失败，可能受限于当前系统环境权限。已支持导出 .cape 配合 Mousecape 使用。";
+"restore_success_toast" = "已成功恢复 macOS 原生默认光标！";
+"restore_fail_error" = "未能完全恢复默认光标，可尝试在【系统设置 > 辅助功能 > 显示 > 指针】中重置。";
+"save_cape_message" = "选择导出 .cape 文件的保存位置";
+"export_cape_success_toast" = "已成功导出【%@】！双击即可在 macOS 中直接使用。";
+"export_cape_fail_error" = "导出失败: %@";
+"export_assets_prompt" = "导出到此文件夹";
+"export_assets_message" = "选择导出图片素材的目标文件夹";
+"export_assets_success_toast" = "已成功导出方案图片素材至【%@】！";
+"export_assets_fail_error" = "导出素材失败: %@";
+"cape_err_serialization" = "无法将光标方案序列化为 .cape 属性列表";
+"cape_err_empty" = "光标方案中没有可导出的光标";
+
+/* Detail View */
+"frames_count_badge" = "%d 帧动画";
+"background_label" = "背景";
+"bg_checkerboard" = "棋盘格";
+"bg_light" = "纯白";
+"bg_dark" = "纯黑";
+"show_hotspot_marker" = "显示点击锚点 (Hotspot 准星)";
+"frame_step_label" = "帧: %d / %d";
+"playback_speed" = "播放速度: %.1fx";
+"spec_source_file" = "源文件:";
+"spec_cursor_size" = "光标尺寸:";
+"spec_cursor_size_val" = "%d × %d 像素";
+"spec_hotspot" = "点击锚点:";
+"spec_hotspot_val" = "X: %d, Y: %d";
+"spec_frame_duration" = "单帧时长:";
+"spec_frame_duration_val" = "%.3f 秒 (~ %d FPS)";
+"filmstrip_title" = "动画序列帧列表 (%d 帧)";
+"system_mappings_title" = "适配的 macOS 系统光标标识符 (System Mappings)";
+
+/* Playground */
+"playground_title" = "鼠标试用体验画板 (Playground)";
+"playground_clicks" = "测试点击次数: %d";
+"playground_hover_hint" = "把鼠标移入此区域，即可即时体验【%@】的手感与点击对准度";
+"playground_align_hint" = "点击此区域可测试准星对齐效果";
+
+/* Item View */
+"badge_animated" = "%d帧动画";
+"badge_static" = "静态";
+"item_hotspot" = "热点: (%d, %d)";
+"item_size" = "尺寸: %d×%d";
+
+/* Status Bar Menu */
+"status_bar_tooltip" = "WinToMacCursor - 鼠标方案快速切换";
+"menu_status_custom" = "● 当前光标: %@";
+"menu_status_custom_fallback" = "已自定义";
+"menu_status_default" = "○ 当前光标: 系统默认";
+"menu_schemes_header" = "快速切换光标方案:";
+"menu_empty_schemes" = "  (方案库暂无方案，请打开主窗口导入)";
+"menu_animated_prefix" = "✨ [动态]";
+"menu_static_prefix" = "🖱️ [静态]";
+"menu_scheme_item" = "%@ %@ (%d 项)";
+"menu_restore_defaults" = "↺ 一键恢复系统默认";
+"menu_open_main_window" = "🪟 打开主窗口...";
+"menu_quit" = "🚪 退出 WinToMacCursor";
+
+/* Roles */
+"role_arrow" = "正常选择 (Normal)";
+"role_help" = "帮助选择 (Help)";
+"role_working" = "后台工作 (Working)";
+"role_busy" = "忙碌等待 (Busy)";
+"role_precision" = "精确定位 (Precision)";
+"role_text" = "文本选择 (Text/IBeam)";
+"role_handwriting" = "手写输入 (Handwriting)";
+"role_unavailable" = "禁止/不可用 (Unavailable)";
+"role_vertical" = "垂直缩放 (Vertical)";
+"role_horizontal" = "水平缩放 (Horizontal)";
+"role_diagonal1" = "对角缩放 1 (Diagonal 1)";
+"role_diagonal2" = "对角缩放 2 (Diagonal 2)";
+"role_move" = "移动 (Move)";
+"role_alternate" = "候选选择 (Alternate)";
+"role_link" = "链接选择 (Link/Hand)";
+"role_person" = "人员/定位 (Person)";
+"role_pin" = "图钉/标记 (Pin)";
+"role_custom" = "自定义光标 (Custom)";

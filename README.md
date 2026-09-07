@@ -5,43 +5,49 @@
 </p>
 
 <p align="center">
-  <b>将 Windows 鼠标光标（.cur / .ani）一键转换为 macOS 原生主题，支持动画回放与会话级系统更换</b>
+  <b>Convert Windows cursor themes (.cur / .ani) into native macOS themes with real-time animation playback, Menu Bar quick-switching, and session-level system cursor replacement.</b>
+</p>
+
+<p align="center">
+  <b>English</b> | <a href="README_cn.md">简体中文</a>
 </p>
 
 ---
 
-## ✨ 核心特性
+## ✨ Key Features
 
-- 📥 **全面的 Windows 光标解析**：原生支持静态 `.cur`、动态 `.ani`（RIFF/ACON 格式，多帧精准解码）与 `install.inf` 方案配置文件。
-- 📦 **macOS 标准 `.cape` 主题导出**：全自动合成 Retina 视网膜级 1x 与 2x 垂直雪碧图（Vertical Sprite Sheet），符合 Mousecape 规范。
-- 🎬 **实时动画预览器**：逐帧高精度回放（支持 0.25x ~ 3x 倍速调节、逐帧步进、热点红十字准星指示）。
-- 🎯 **鼠标试用画板 (Cursor Playground)**：互动体验区，鼠标滑入即时动态切换为光标动画，支持点击波纹与定位手感反馈。
-- ⚡ **一键更换系统光标 (Apply)**：基于 macOS 底层 SkyLight CGS 私有 API，即时在系统会话中全局生效，免第三方依赖。
-- ↺ **正版原生光标一键恢复 (Restore)**：内置 Apple 原生全套 21 项系统光标资产（`DefaultMacCursor.cape`），安全可靠，一键瞬时还原正统苹果默认指针。
-- 💾 **方案库本地持久化**：支持自由导入外部方案包与光标文件，数据持久保存于应用支持库中。
+- 📥 **Comprehensive Windows Cursor Parsing**: Native decoding of static `.cur` files, animated `.ani` files (RIFF/ACON format with multi-frame precision decoding), and `install.inf` theme configuration scripts.
+- 📦 **macOS Standard `.cape` Theme Export**: Automatically stitches vertical sprite sheets in both 1x and 2x Retina resolutions, fully compatible with the macOS Mousecape specification.
+- 🎬 **Real-Time Animation Inspector**: High-precision frame-by-frame preview with adjustable speed (0.25x – 3.0x), step-forward/backward controls, and interactive red crosshair hotspot indicator.
+- 🎯 **Interactive Cursor Playground**: A dedicated sandbox where hovering instantly renders your custom animated cursor with click ripple feedback and alignment testing.
+- ⚡ **One-Click System Cursor Application**: Powered by macOS low-level SkyLight CGS APIs to immediately update global system pointers without requiring third-party tools or system reboot.
+- 🚀 **Menu Bar Quick Switcher**: Always accessible from the macOS menu bar. Easily switch between all imported cursor schemes or restore defaults in seconds.
+- ↺ **Authentic Apple Default Cursor Restoration**: Ships with a complete bundle of 21 authentic macOS default cursor assets (`DefaultMacCursor.cape`) to instantly restore system cursors safely and cleanly.
+- 🌐 **Multilingual Localization (i18n)**: Full support for both English and Simplified Chinese (zh-Hans). Automatically follows macOS system language and allows in-app language switching.
+- 💾 **Persistent Theme Library**: Import custom themes or individual cursor files with persistent storage in your Application Support directory.
 
 ---
 
-## 🛠️ 构建与运行
+## 🛠️ Requirements & Building
 
-### 系统要求
-- macOS 13.0 (Ventura) 及更高版本
+### Requirements
+- macOS 13.0 (Ventura) or later
 - Xcode Command Line Tools (`swiftc`)
 
-### 本地编译
-克隆本仓库后，直接运行内置构建脚本：
+### Build from Source
+Clone this repository and run the build script:
 ```bash
 bash scripts/build_app.sh
 ```
-构建产物将输出在 `dist/WinToMacCursor.app`。
+The compiled bundle will be available at `dist/WinToMacCursor.app`.
 
-运行应用：
+Launch the application:
 ```bash
 open "dist/WinToMacCursor.app"
 ```
 
 ---
 
-## 📄 许可证
+## 📄 License
 
 MIT License.

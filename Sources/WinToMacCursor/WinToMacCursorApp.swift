@@ -3,9 +3,10 @@ import SwiftUI
 @main
 struct WinToMacCursorApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @ObservedObject private var langManager = LanguageManager.shared
 
     var body: some Scene {
-        WindowGroup("WinToMacCursor - Windows 光标转换与管理器") {
+        WindowGroup(L10n.tr("app_title")) {
             ContentView()
         }
         .windowStyle(.titleBar)
