@@ -17,12 +17,12 @@ struct WinToMacCursorApp: App {
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        StatusBarManager.shared.setup()
+    }
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if !flag {
-            for window in sender.windows {
-                window.makeKeyAndOrderFront(self)
-            }
-        }
+        StatusBarManager.shared.showMainWindow()
         return true
     }
 

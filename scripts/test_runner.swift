@@ -132,7 +132,7 @@ struct TestRunner {
         assertTrue(restoreOk, "Native DefaultMacCursor restoration executed and applied successfully onto WindowServer")
 
         // 5. Test SchemeLibraryManager Persistence & Sidebar Exclusion
-        print("\n--- [5/5] Testing SchemeLibraryManager Persistence & Sidebar Exclusion ---")
+        print("\n--- [5/6] Testing SchemeLibraryManager Persistence & Sidebar Exclusion ---")
         let library = SchemeLibraryManager.shared
         assertTrue(FileManager.default.fileExists(atPath: library.libraryDirectory.path), "Library directory exists at \(library.libraryDirectory.path)")
         assertTrue(!library.schemes.isEmpty, "Themes successfully bootstrapped into library (\(library.schemes.count) schemes present)")
@@ -144,6 +144,20 @@ struct TestRunner {
             return lower.contains("defaultmaccursor") || lower.contains("macos default")
         }
         assertTrue(!containsDefaultInSidebar, "Native recovery scheme is strictly excluded from sidebar schemes list ('但是不要写在侧面')")
+
+        // 6. Test StatusBarManager Menu Construction
+        print("\n--- [6/6] Testing StatusBarManager & Menu Bar Switcher ---")
+        let statusManager = StatusBarManager.shared
+        statusManager.setup()
+        let testMenu = NSMenu()
+        statusManager.menuNeedsUpdate(testMenu)
+        assertTrue(testMenu.items.count >= 5, "StatusBar menu built successfully with \(testMenu.items.count) items")
+        let hasRestoreItem = testMenu.items.contains { $0.title.contains("恢复系统默认") }
+        assertTrue(hasRestoreItem, "StatusBar menu contains '恢复系统默认' item")
+        let hasOpenWindowItem = testMenu.items.contains { $0.title.contains("打开主窗口") }
+        assertTrue(hasOpenWindowItem, "StatusBar menu contains '打开主窗口' item")
+        let hasQuitItem = testMenu.items.contains { $0.title.contains("退出") }
+        assertTrue(hasQuitItem, "StatusBar menu contains '退出' item")
 
         // Clean up temporary test files
         try? FileManager.default.removeItem(at: tmpDir)

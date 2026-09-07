@@ -91,6 +91,10 @@ public struct ContentView: View {
                         Text("已应用: \(last)")
                             .font(.system(size: 9))
                             .foregroundColor(.secondary)
+                    } else {
+                        Text("支持在顶部菜单栏快速切换")
+                            .font(.system(size: 9))
+                            .foregroundColor(.secondary)
                     }
                 }
                 Spacer()
