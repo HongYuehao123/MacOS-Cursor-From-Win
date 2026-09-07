@@ -81,7 +81,9 @@ public struct SettingsView: View {
                     .font(.title2)
                     .fontWeight(.bold)
 
-                Text(String(format: L10n.tr("settings_version_label"), "1.0.0", "1"))
+                let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.1.0"
+                let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+                Text(String(format: L10n.tr("settings_version_label"), appVersion, buildVersion))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 8)

@@ -24,6 +24,7 @@
 - 🚀 **Menu Bar Quick Switcher**: Always accessible from the macOS menu bar. Easily switch between all imported cursor schemes or restore defaults in seconds.
 - ↺ **Authentic Apple Default Cursor Restoration**: Ships with a complete bundle of 21 authentic macOS default cursor assets (`DefaultMacCursor.cape`) to instantly restore system cursors safely and cleanly.
 - 🌐 **Multilingual Localization (i18n)**: Full support for both English and Simplified Chinese (zh-Hans). Automatically follows macOS system language and allows in-app language switching.
+- ⚙️ **Native macOS Settings & Dock Control**: Dedicated Settings window (`Cmd+,`) featuring in-app language switching, quit restoration preferences, and the ability to hide the Dock icon to run purely in the menu bar.
 - 💾 **Persistent Theme Library**: Import custom themes or individual cursor files with persistent storage in your Application Support directory.
 
 ---
