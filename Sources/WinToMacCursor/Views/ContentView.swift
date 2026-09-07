@@ -195,29 +195,12 @@ public struct ContentView: View {
     @ToolbarContentBuilder
     private var toolbarItems: some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
-            // Language Picker Menu
-            Menu {
-                ForEach(AppLanguage.allCases) { lang in
-                    Button {
-                        langManager.selectedLanguage = lang
-                    } label: {
-                        HStack {
-                            Text(lang.displayName)
-                            if langManager.selectedLanguage == lang {
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-                }
-            } label: {
-                Label(L10n.tr("language_menu"), systemImage: "globe")
-            }
-            .help(L10n.tr("language_menu"))
-
             // Restore on Quit option
             Toggle(L10n.tr("restore_on_quit"), isOn: $restoreOnQuit)
                 .toggleStyle(.checkbox)
                 .font(.caption)
+                .padding(.horizontal, 6)
+                .padding(.trailing, 6)
                 .help(L10n.tr("restore_on_quit_help"))
 
             // Apply Button

@@ -109,7 +109,19 @@ public final class StatusBarManager: NSObject, NSMenuDelegate {
         openWindowItem.target = self
         menu.addItem(openWindowItem)
 
-        // 5. Quit App
+        // 5. Settings Window
+        let settingsItem = NSMenuItem(
+            title: L10n.tr("menu_settings"),
+            action: #selector(openSettingsClicked(_:)),
+            keyEquivalent: ","
+        )
+        settingsItem.keyEquivalentModifierMask = [.command]
+        settingsItem.target = self
+        menu.addItem(settingsItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        // 6. Quit App
         let quitItem = NSMenuItem(
             title: L10n.tr("menu_quit"),
             action: #selector(quitAppClicked(_:)),
@@ -148,8 +160,20 @@ public final class StatusBarManager: NSObject, NSMenuDelegate {
         showMainWindow()
     }
 
+    @objc public func openSettingsClicked(_ sender: Any?) {
+        showSettings()
+    }
+
     @objc private func quitAppClicked(_ sender: NSMenuItem) {
         NSApp.terminate(nil)
+    }
+
+    public func showSettings() {
+        NSApp.activate(ignoringOtherApps: true)
+        let success = NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        if !success {
+            _ = NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+        }
     }
 
     public func showMainWindow() {

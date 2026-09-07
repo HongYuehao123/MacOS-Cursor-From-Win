@@ -94,7 +94,23 @@
 "menu_scheme_item" = "%@ %@ (%d cursors)";
 "menu_restore_defaults" = "↺ Restore System Defaults";
 "menu_open_main_window" = "🪟 Open Main Window...";
+"menu_settings" = "⚙️ Settings...";
 "menu_quit" = "🚪 Quit WinToMacCursor";
+
+/* Settings Window */
+"settings_title" = "Settings";
+"settings_general_tab" = "General";
+"settings_language_section" = "Language";
+"settings_language_label" = "App Language:";
+"settings_dock_section" = "Menu Bar & Dock";
+"settings_hide_dock_icon" = "Hide Dock Icon (Menu Bar Only)";
+"settings_hide_dock_icon_desc" = "When enabled, the app runs quietly in the top menu bar without appearing in the Dock or App Switcher (Cmd+Tab).";
+"settings_termination_section" = "Quit Behavior";
+"settings_restore_on_quit" = "Restore macOS default cursor on quit";
+"settings_restore_on_quit_desc" = "Automatically reverts custom cursor modifications back to Apple native defaults when exiting the application.";
+"settings_about_section" = "About";
+"settings_version_label" = "Version %@ (%@)";
+"settings_about_description" = "A native macOS utility to convert and manage Windows .cur and .ani cursor themes.";
 
 /* Roles */
 "role_arrow" = "Normal Select";

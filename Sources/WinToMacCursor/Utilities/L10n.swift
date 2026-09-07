@@ -176,7 +176,23 @@ public struct L10n {
         "menu_scheme_item": "%@ %@ (%d cursors)",
         "menu_restore_defaults": "↺ Restore System Defaults",
         "menu_open_main_window": "🪟 Open Main Window...",
+        "menu_settings": "⚙️ Settings...",
         "menu_quit": "🚪 Quit WinToMacCursor",
+
+        // Settings Window
+        "settings_title": "Settings",
+        "settings_general_tab": "General",
+        "settings_language_section": "Language",
+        "settings_language_label": "App Language:",
+        "settings_dock_section": "Menu Bar & Dock",
+        "settings_hide_dock_icon": "Hide Dock Icon (Menu Bar Only)",
+        "settings_hide_dock_icon_desc": "When enabled, the app runs quietly in the top menu bar without appearing in the Dock or App Switcher (Cmd+Tab).",
+        "settings_termination_section": "Quit Behavior",
+        "settings_restore_on_quit": "Restore macOS default cursor on quit",
+        "settings_restore_on_quit_desc": "Automatically reverts custom cursor modifications back to Apple native defaults when exiting the application.",
+        "settings_about_section": "About",
+        "settings_version_label": "Version %@ (%@)",
+        "settings_about_description": "A native macOS utility to convert and manage Windows .cur and .ani cursor themes.",
 
         // Roles
         "role_arrow": "Normal Select",
@@ -295,7 +311,23 @@ public struct L10n {
         "menu_scheme_item": "%@ %@ (%d 项)",
         "menu_restore_defaults": "↺ 一键恢复系统默认",
         "menu_open_main_window": "🪟 打开主窗口...",
+        "menu_settings": "⚙️ 设置...",
         "menu_quit": "🚪 退出 WinToMacCursor",
+
+        // Settings Window
+        "settings_title": "设置",
+        "settings_general_tab": "通用",
+        "settings_language_section": "语言设置",
+        "settings_language_label": "界面语言:",
+        "settings_dock_section": "菜单栏与程序坞 (Dock)",
+        "settings_hide_dock_icon": "隐藏程序坞 (Dock) 图标",
+        "settings_hide_dock_icon_desc": "开启后应用仅在顶部菜单栏常驻，不占用程序坞与任务切换器 (Cmd+Tab)，需打开窗口时点击菜单栏图标即可。",
+        "settings_termination_section": "退出行为",
+        "settings_restore_on_quit": "完全退出时恢复系统默认光标",
+        "settings_restore_on_quit_desc": "完全退出应用时，自动将所有鼠标指针重置还原为 macOS 原生系统默认样式。",
+        "settings_about_section": "关于",
+        "settings_version_label": "版本 %@ (%@)",
+        "settings_about_description": "专为 macOS 打造的原生 Windows .cur 与 .ani 光标转换与管理器。",
 
         // Roles
         "role_arrow": "正常选择 (Normal)",

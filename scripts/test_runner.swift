@@ -177,9 +177,11 @@ struct TestRunner {
         statusManager.menuNeedsUpdate(enMenu)
         let enHasRestore = enMenu.items.contains { $0.title.contains("Restore System Defaults") }
         let enHasOpen = enMenu.items.contains { $0.title.contains("Open Main Window") }
+        let enHasSettings = enMenu.items.contains { $0.title.contains("Settings") && $0.keyEquivalent == "," }
         let enHasQuit = enMenu.items.contains { $0.title.contains("Quit WinToMacCursor") }
         assertTrue(enHasRestore, "English menu contains 'Restore System Defaults'")
         assertTrue(enHasOpen, "English menu contains 'Open Main Window'")
+        assertTrue(enHasSettings, "English menu contains 'Settings...' with Cmd+,")
         assertTrue(enHasQuit, "English menu contains 'Quit WinToMacCursor'")
 
         // Test Chinese localization
@@ -196,12 +198,44 @@ struct TestRunner {
         statusManager.menuNeedsUpdate(zhMenu)
         let zhHasRestore = zhMenu.items.contains { $0.title.contains("一键恢复系统默认") }
         let zhHasOpen = zhMenu.items.contains { $0.title.contains("打开主窗口") }
+        let zhHasSettings = zhMenu.items.contains { $0.title.contains("设置") && $0.keyEquivalent == "," }
         let zhHasQuit = zhMenu.items.contains { $0.title.contains("退出 WinToMacCursor") }
         assertTrue(zhHasRestore, "Chinese menu contains '一键恢复系统默认'")
         assertTrue(zhHasOpen, "Chinese menu contains '打开主窗口'")
+        assertTrue(zhHasSettings, "Chinese menu contains '设置...' with Cmd+,")
         assertTrue(zhHasQuit, "Chinese menu contains '退出 WinToMacCursor'")
 
-        // Reset to system default
+        // 8. Test AppStateManager & Dock Hiding Logic
+        print("\n--- [8/8] Testing AppStateManager & Dock Icon Hiding Logic ---")
+        let appState = AppStateManager.shared
+        let originalHideDock = appState.hideDockIcon
+        let originalRestore = appState.restoreOnQuit
+
+        appState.hideDockIcon = true
+        assertTrue(UserDefaults.standard.bool(forKey: AppStateManager.hideDockIconKey) == true, "UserDefaults persists hideDockIcon = true")
+        let policyAccessory = appState.applyActivationPolicy()
+        assertTrue(policyAccessory == .accessory, "Activation policy set to .accessory when hideDockIcon = true")
+
+        appState.hideDockIcon = false
+        assertTrue(UserDefaults.standard.bool(forKey: AppStateManager.hideDockIconKey) == false, "UserDefaults persists hideDockIcon = false")
+        let policyRegular = appState.applyActivationPolicy()
+        assertTrue(policyRegular == .regular, "Activation policy restored to .regular when hideDockIcon = false")
+
+        appState.restoreOnQuit = true
+        assertTrue(UserDefaults.standard.bool(forKey: AppStateManager.restoreOnQuitKey) == true, "UserDefaults persists restoreOnQuit = true")
+
+        // Verify Settings strings
+        langManager.selectedLanguage = .english
+        assertTrue(L10n.tr("settings_title") == "Settings", "English Settings title verified")
+        assertTrue(L10n.tr("settings_hide_dock_icon") == "Hide Dock Icon (Menu Bar Only)", "English hide dock icon string verified")
+
+        langManager.selectedLanguage = .chinese
+        assertTrue(L10n.tr("settings_title") == "设置", "Chinese Settings title verified")
+        assertTrue(L10n.tr("settings_hide_dock_icon") == "隐藏程序坞 (Dock) 图标", "Chinese hide dock icon string verified")
+
+        // Restore original states
+        appState.hideDockIcon = originalHideDock
+        appState.restoreOnQuit = originalRestore
         langManager.selectedLanguage = .system
 
         // Clean up temporary test files

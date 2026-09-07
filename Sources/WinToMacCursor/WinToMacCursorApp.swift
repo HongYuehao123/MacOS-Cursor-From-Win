@@ -14,12 +14,16 @@ struct WinToMacCursorApp: App {
         .commands {
             SidebarCommands()
         }
+        Settings {
+            SettingsView()
+        }
     }
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         StatusBarManager.shared.setup()
+        AppStateManager.shared.applyActivationPolicy()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -28,7 +32,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        if UserDefaults.standard.bool(forKey: "WinToMacCursor_RestoreOnQuit") {
+        if UserDefaults.standard.bool(forKey: AppStateManager.restoreOnQuitKey) {
             SystemCursorManager.shared.restoreDefaults()
         }
     }
