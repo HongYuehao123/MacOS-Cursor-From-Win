@@ -1,0 +1,19 @@
+# User requested exclusion
+Test/
+
+# Build and runtime data
+.build/
+.swift_cache/
+.wintomac_data/
+dist/
+*.o
+*.zip
+
+# macOS system files
+.DS_Store
+*.swp
+*~
+*.lock
+
+# Temporary and scratch files
+scratch/
