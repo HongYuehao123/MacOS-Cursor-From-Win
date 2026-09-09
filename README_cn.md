@@ -1,7 +1,7 @@
 # WinToMacCursor 🖱️✨
 
 <p align="center">
-  <img src="Resources/AppIcon.png" width="128" height="128" alt="WinToMacCursor 图标">
+  <img src="WinToMacCursor/Assets.xcassets/AppIcon.appiconset/icon_512x512@2x.png" width="128" height="128" alt="WinToMacCursor 图标">
 </p>
 
 <p align="center">
@@ -66,9 +66,9 @@ WinToMacCursor (v2.0.0 架构)
 │   └── INFParser.swift             # install.inf 主题脚本解析器
 ├── Generators/
 │   └── CapeGenerator.swift         # 垂直雪碧图与 .cape 格式生成器
-└── Resources/
-    ├── AppIcon.icns                # 多分辨率原生 macOS 图标包
-    └── DefaultMacCursor.cape       # Apple 原生默认光标资源包
+├── AppIcon.icns                    # 多分辨率原生 macOS 图标包
+├── Assets.xcassets                 # 原生 macOS Asset Catalog（包含全套高清应用图标与强调色）
+└── DefaultMacCursor.cape           # Apple 原生默认光标资源包
 ```
 
 ---

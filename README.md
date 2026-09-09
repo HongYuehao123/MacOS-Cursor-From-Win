@@ -1,7 +1,11 @@
 # WinToMacCursor 🖱️✨
 
 <p align="center">
+<<<<<<< Updated upstream
   <img src="WinToMacCursor/AppIcon.icns" width="128" height="128" alt="WinToMacCursor Icon">
+=======
+  <img src="WinToMacCursor/Assets.xcassets/AppIcon.appiconset/icon_512x512@2x.png" width="128" height="128" alt="WinToMacCursor Icon">
+>>>>>>> Stashed changes
 </p>
 
 <p align="center">
@@ -66,9 +70,9 @@ WinToMacCursor (v2.0.0 Architecture)
 │   └── INFParser.swift             # install.inf Theme Script Parser
 ├── Generators/
 │   └── CapeGenerator.swift         # Vertical Sprite Sheet & .cape Theme Generator
-└── Resources/
-    ├── AppIcon.icns                # Multi-resolution macOS App Icon
-    └── DefaultMacCursor.cape       # Authentic Apple System Cursor Assets
+├── AppIcon.icns                    # Multi-resolution macOS App Icon
+├── Assets.xcassets                 # Native macOS Asset Catalog (AppIcon & AccentColor)
+└── DefaultMacCursor.cape           # Authentic Apple System Cursor Assets
 ```
 
 ---
