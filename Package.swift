@@ -16,6 +16,9 @@ let package = Package(
         .executableTarget(
             name: "WinToMacCursor",
             path: "Sources/WinToMacCursor",
+            resources: [
+                .process("AppIcon.icns")
+            ],
             linkerSettings: [
                 .unsafeFlags([
                     "-Xlinker", "-sectcreate",
