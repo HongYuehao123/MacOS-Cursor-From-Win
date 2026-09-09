@@ -1,12 +1,9 @@
 # WinToMacCursor 🖱️✨
 
 <p align="center">
-<<<<<<< Updated upstream
-  <img src="WinToMacCursor/AppIcon.icns" width="128" height="128" alt="WinToMacCursor Icon">
-=======
   <img src="WinToMacCursor/Assets.xcassets/AppIcon.appiconset/icon_512x512@2x.png" width="128" height="128" alt="WinToMacCursor Icon">
->>>>>>> Stashed changes
 </p>
+
 
 <p align="center">
   <b>A modern native macOS menu bar application built with SwiftUI to convert Windows cursor themes (.cur / .ani) into native macOS themes with real-time animation preview, menu bar quick-switching, and deep session-level system pointer injection.</b>
