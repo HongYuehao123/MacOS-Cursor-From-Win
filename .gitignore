@@ -6,8 +6,15 @@ Test/
 .swift_cache/
 .wintomac_data/
 dist/
+build/
+DerivedData/
 *.o
 *.zip
+
+# Xcode
+*.xcuserstate
+project.xcworkspace/xcuserdata/
+*.xcuserdata/
 
 # macOS system files
 .DS_Store
