@@ -15,7 +15,15 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "WinToMacCursor",
-            path: "Sources/WinToMacCursor"
+            path: "Sources/WinToMacCursor",
+            linkerSettings: [
+                .unsafeFlags([
+                    "-Xlinker", "-sectcreate",
+                    "-Xlinker", "__TEXT",
+                    "-Xlinker", "__info_plist",
+                    "-Xlinker", "Sources/WinToMacCursor/Info.plist"
+                ])
+            ]
         )
     ]
 )
