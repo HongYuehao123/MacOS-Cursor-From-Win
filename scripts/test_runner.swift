@@ -238,6 +238,57 @@ struct TestRunner {
         appState.restoreOnQuit = originalRestore
         langManager.selectedLanguage = .system
 
+        // 9. Test WindowServer Seed Registration & Playground Lifecycle
+        print("\n--- [9/9] Testing WindowServer Seed Sync & Playground Lifecycle ---")
+        let testScheme = try! SchemeLoader.loadScheme(from: staticDir)
+        let applySuccess = manager.applyScheme(testScheme)
+        assertTrue(applySuccess.success > 0, "SystemCursorManager applyScheme with registered seed registered \(applySuccess.success)/\(applySuccess.total) cursors")
+
+        let restoreAfterApply = manager.restoreDefaults()
+        assertTrue(restoreAfterApply, "SystemCursorManager restoreDefaults with registered seed executed successfully")
+
+        let testWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 400),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        let playgroundView = PlaygroundContainerView(frame: NSRect(x: 0, y: 0, width: 400, height: 400))
+        testWindow.contentView?.addSubview(playgroundView)
+        playgroundView.updateCursor(with: testScheme.items[0])
+
+        assertTrue(playgroundView.currentCursor != nil, "Playground view configured cursor from item")
+
+        // Verify resetCursorRects executes cleanly
+        playgroundView.resetCursorRects()
+        assertTrue(playgroundView.currentCursor != nil, "Playground view has valid cursor setup")
+
+        // Verify cleanup stops any active animations and clears inside state
+        playgroundView.isMouseInside = true
+        playgroundView.cleanup()
+        assertTrue(!playgroundView.mouseInside, "Playground cleanup sets mouseInside to false")
+        assertTrue(!playgroundView.isAnimating, "Playground cleanup stops animTimer")
+
+        // Verify notification observers trigger cleanup
+        playgroundView.isMouseInside = true
+        NotificationCenter.default.post(name: NSApplication.didResignActiveNotification, object: nil)
+        assertTrue(!playgroundView.mouseInside, "App didResignActive triggers playground cleanup")
+
+        playgroundView.isMouseInside = true
+        NotificationCenter.default.post(name: NSWindow.didResignKeyNotification, object: testWindow)
+        assertTrue(!playgroundView.mouseInside, "Window didResignKey triggers playground cleanup")
+
+        playgroundView.isMouseInside = true
+        NotificationCenter.default.post(name: NSWindow.didMiniaturizeNotification, object: testWindow)
+        assertTrue(!playgroundView.mouseInside, "Window didMiniaturize triggers playground cleanup")
+
+        // Verify dismantleNSView triggers cleanup
+        playgroundView.isMouseInside = true
+        PlaygroundNSViewRepresentable.dismantleNSView(playgroundView, coordinator: ())
+        assertTrue(!playgroundView.mouseInside, "dismantleNSView triggers playground cleanup")
+
+        testWindow.orderOut(nil)
+
         // Clean up temporary test files
         try? FileManager.default.removeItem(at: tmpDir)
 

@@ -54,7 +54,7 @@ public struct CursorPlaygroundView: View {
     }
 }
 
-private struct PlaygroundNSViewRepresentable: NSViewRepresentable {
+struct PlaygroundNSViewRepresentable: NSViewRepresentable {
     let item: CursorItem
     let onClick: (CGPoint) -> Void
 
@@ -69,16 +69,23 @@ private struct PlaygroundNSViewRepresentable: NSViewRepresentable {
         nsView.onClick = onClick
         nsView.updateCursor(with: item)
     }
+
+    static func dismantleNSView(_ nsView: PlaygroundContainerView, coordinator: ()) {
+        nsView.cleanup()
+    }
 }
 
-private class PlaygroundContainerView: NSView {
+class PlaygroundContainerView: NSView {
     var onClick: ((CGPoint) -> Void)?
-    private var currentItem: CursorItem?
-    private var currentCursor: NSCursor?
-    private var currentFrameIndex: Int = 0
-    private var animTimer: Timer?
-    private var isMouseInside: Bool = false
+    var currentItem: CursorItem?
+    var currentCursor: NSCursor?
+    var currentFrameIndex: Int = 0
+    var animTimer: Timer?
+    var isMouseInside: Bool = false
+    var isAnimating: Bool { animTimer != nil }
+    var mouseInside: Bool { isMouseInside }
     private var trackingAreaRef: NSTrackingArea?
+    private var observers: [NSObjectProtocol] = []
 
     private var ripplePoint: CGPoint?
     private var rippleRadius: CGFloat = 0
@@ -87,11 +94,66 @@ private class PlaygroundContainerView: NSView {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
+        setupAppObservers()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         wantsLayer = true
+        setupAppObservers()
+    }
+
+    private func setupAppObservers() {
+        let nc = NotificationCenter.default
+        // Halt any playground animations when the app leaves foreground
+        observers.append(nc.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.cleanup()
+        })
+        observers.append(nc.addObserver(forName: NSApplication.didHideNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.cleanup()
+        })
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        cleanup()
+
+        if let win = window {
+            let nc = NotificationCenter.default
+            // Halt animations when window loses key focus
+            observers.append(nc.addObserver(forName: NSWindow.didResignKeyNotification, object: win, queue: .main) { [weak self] _ in
+                self?.cleanup()
+            })
+            // Halt animations when window minimizes
+            observers.append(nc.addObserver(forName: NSWindow.didMiniaturizeNotification, object: win, queue: .main) { [weak self] _ in
+                self?.cleanup()
+            })
+            // Halt animations when window closes
+            observers.append(nc.addObserver(forName: NSWindow.willCloseNotification, object: win, queue: .main) { [weak self] _ in
+                self?.cleanup()
+            })
+        }
+    }
+
+    override func viewWillMove(toWindow newWindow: NSWindow?) {
+        super.viewWillMove(toWindow: newWindow)
+        cleanup()
+    }
+
+    deinit {
+        cleanup()
+        for obs in observers {
+            NotificationCenter.default.removeObserver(obs)
+        }
+        observers.removeAll()
+    }
+
+    public func cleanup() {
+        isMouseInside = false
+        stopAnimationTimer()
+        rippleTimer?.invalidate()
+        rippleTimer = nil
+        window?.invalidateCursorRects(for: self)
     }
 
     override func updateTrackingAreas() {
@@ -118,9 +180,8 @@ private class PlaygroundContainerView: NSView {
             refreshCurrentCursor()
         }
 
-        if isMouseInside {
+        if isMouseInside && NSApp.isActive && (window?.isKeyWindow ?? false) {
             startAnimationTimer()
-            currentCursor?.set()
         } else {
             stopAnimationTimer()
         }
@@ -145,27 +206,34 @@ private class PlaygroundContainerView: NSView {
 
         let interval = max(0.016, item.frameRate)
         let timer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
-            guard let self = self, self.isMouseInside, let item = self.currentItem, !item.frames.isEmpty else { return }
+            guard let self = self else { return }
 
-            // Safeguard: verify mouse is still within bounds
-            if let win = self.window {
-                let mouseInWindow = win.mouseLocationOutsideOfEventStream
-                let mouseInView = self.convert(mouseInWindow, from: nil)
-                if !self.bounds.contains(mouseInView) {
-                    self.isMouseInside = false
-                    self.stopAnimationTimer()
-                    return
-                }
+            // Strict multi-layer safety guards:
+            guard self.isMouseInside,
+                  NSApp.isActive,
+                  let win = self.window,
+                  win.isKeyWindow,
+                  win.isVisible else {
+                self.cleanup()
+                return
+            }
+
+            // Verify mouse is still inside view bounds
+            let mouseInWindow = win.mouseLocationOutsideOfEventStream
+            let mouseInView = self.convert(mouseInWindow, from: nil)
+            guard self.bounds.contains(mouseInView) else {
+                self.cleanup()
+                return
             }
 
             self.currentFrameIndex = (self.currentFrameIndex + 1) % item.frames.count
             let frame = item.frames[self.currentFrameIndex]
             let cursor = NSCursor(image: frame.image, hotSpot: frame.hotspot)
             self.currentCursor = cursor
-            cursor.set()
+            win.invalidateCursorRects(for: self)
         }
         self.animTimer = timer
-        RunLoop.main.add(timer, forMode: .common)
+        RunLoop.main.add(timer, forMode: .default)
     }
 
     private func stopAnimationTimer() {
@@ -175,22 +243,23 @@ private class PlaygroundContainerView: NSView {
 
     override func mouseEntered(with event: NSEvent) {
         super.mouseEntered(with: event)
+        guard NSApp.isActive, (window?.isKeyWindow ?? false) else { return }
         isMouseInside = true
         startAnimationTimer()
-        currentCursor?.set()
+        window?.invalidateCursorRects(for: self)
     }
 
     override func mouseExited(with event: NSEvent) {
         super.mouseExited(with: event)
-        isMouseInside = false
-        stopAnimationTimer()
-        NSCursor.arrow.set()
+        cleanup()
     }
 
     override func mouseMoved(with event: NSEvent) {
         super.mouseMoved(with: event)
-        if isMouseInside, let cursor = currentCursor {
-            cursor.set()
+        if !isMouseInside && NSApp.isActive && (window?.isKeyWindow ?? false) {
+            isMouseInside = true
+            startAnimationTimer()
+            window?.invalidateCursorRects(for: self)
         }
     }
 
@@ -208,20 +277,6 @@ private class PlaygroundContainerView: NSView {
         } else {
             super.resetCursorRects()
         }
-    }
-
-    override func viewWillMove(toWindow newWindow: NSWindow?) {
-        super.viewWillMove(toWindow: newWindow)
-        if newWindow == nil {
-            isMouseInside = false
-            stopAnimationTimer()
-            rippleTimer?.invalidate()
-        }
-    }
-
-    deinit {
-        stopAnimationTimer()
-        rippleTimer?.invalidate()
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -284,3 +339,4 @@ private class PlaygroundContainerView: NSView {
         }
     }
 }
+

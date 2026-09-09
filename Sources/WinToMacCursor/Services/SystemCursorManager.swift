@@ -227,7 +227,7 @@ public final class SystemCursorManager: ObservableObject {
                 )
 
                 if regErr == 0 {
-                    var actSeed: Int32 = 0
+                    var actSeed: Int32 = seed
                     let _ = activateFn(cid, ident, &actSeed)
                     successCount += 1
                 } else {
@@ -312,7 +312,7 @@ public final class SystemCursorManager: ObservableObject {
                     &seed
                 )
                 if regErr == 0 {
-                    var actSeed: Int32 = 0
+                    var actSeed: Int32 = seed
                     let _ = activateFn(cid, ident, &actSeed)
                     didRestore = true
                 }
