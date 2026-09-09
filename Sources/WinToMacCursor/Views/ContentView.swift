@@ -36,14 +36,8 @@ public struct ContentView: View {
                     toastView(message: err, isError: true)
                 }
             }
-            .background {
-                SettingsBridgeView()
-            }
             .onAppear {
                 langManager.updateAllWindowsTitle()
-                StatusBarManager.shared.openMainWindow = { [openWindow] in
-                    openWindow(id: "main")
-                }
             }
             .onChange(of: langManager.selectedLanguageRaw) { _, _ in
                 langManager.updateAllWindowsTitle()
@@ -388,20 +382,6 @@ public struct ContentView: View {
         .padding(.top, 16)
         .transition(.move(edge: .top).combined(with: .opacity))
         .animation(.easeInOut, value: message)
-    }
-}
-@available(macOS 14.0, *)
-struct SettingsBridgeView: View {
-    @Environment(\.openSettings) private var openSettings
-
-    var body: some View {
-        Color.clear
-            .frame(width: 0, height: 0)
-            .onAppear {
-                StatusBarManager.shared.openSettingsWindow = {
-                    openSettings()
-                }
-            }
     }
 }
 
