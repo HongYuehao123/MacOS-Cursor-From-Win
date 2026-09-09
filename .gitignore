@@ -7,15 +7,21 @@ Test/
 .wintomac_data/
 .swiftpm/
 dist/
+# Xcode & Build outputs
 build/
 DerivedData/
 *.o
 *.zip
+*.xcarchive
+*.xcarchive/
+WinToMacCursor [0-9]*/
 
-# Xcode
+# Xcode user state
 *.xcuserstate
-project.xcworkspace/xcuserdata/
 *.xcuserdata/
+xcuserdata/
+project.xcworkspace/xcuserdata/
+*.xcworkspace/xcuserdata/
 
 # macOS system files
 .DS_Store
