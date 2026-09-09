@@ -5,6 +5,7 @@ Test/
 .build/
 .swift_cache/
 .wintomac_data/
+.swiftpm/
 dist/
 build/
 DerivedData/
