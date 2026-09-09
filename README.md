@@ -1,7 +1,7 @@
 # WinToMacCursor 🖱️✨
 
 <p align="center">
-  <img src="Resources/AppIcon.png" width="128" height="128" alt="WinToMacCursor Icon">
+  <img src="WinToMacCursor/AppIcon.png" width="128" height="128" alt="WinToMacCursor Icon">
 </p>
 
 <p align="center">
