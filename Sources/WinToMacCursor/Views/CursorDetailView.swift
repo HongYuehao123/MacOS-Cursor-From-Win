@@ -32,243 +32,251 @@ public struct CursorDetailView: View {
     }
 
     public var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // Header
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 8) {
-                            Text(item.name)
-                                .font(.title2)
-                                .bold()
-
-                            if item.isAnimated {
-                                Text(L10n.tr("frames_count_badge", item.frames.count))
-                                    .font(.caption)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 3)
-                                    .background(Color.blue.opacity(0.15))
-                                    .foregroundColor(.blue)
-                                    .cornerRadius(6)
-                            }
-                        }
-
-                        Text(item.role.localizedName)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-
-                    Spacer()
-
-                    // Background selector (hidden label removes unwanted '背景' text and prevents 160pt height inflation)
-                    Picker("", selection: $backgroundMode) {
-                        ForEach(BackgroundMode.allCases) { mode in
-                            Text(mode.displayName).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .frame(width: langManager.effectiveLanguageIsChinese ? 180 : 220)
-                    .id("bg_picker_\(langManager.selectedLanguageRaw)_\(langManager.effectiveLanguageIsChinese)")
-                }
-
-                // Magnified Visualizer
-                HStack(alignment: .top, spacing: 20) {
-                    // Preview Box
-                    ZStack {
-                        // Background
-                        previewBackground
-
-                        // Cursor Image (Scaled)
-                        if let currentFrame = activeFrame {
-                            GeometryReader { geo in
-                                let scale: CGFloat = 4.0
-                                let drawW = currentFrame.size.width * scale
-                                let drawH = currentFrame.size.height * scale
-                                let originX = (geo.size.width - drawW) / 2
-                                let originY = (geo.size.height - drawH) / 2
-
-                                ZStack(alignment: .topLeading) {
-                                    Image(nsImage: currentFrame.image)
-                                        .interpolation(.none)
-                                        .resizable()
-                                        .frame(width: drawW, height: drawH)
-                                        .offset(x: originX, y: originY)
-
-                                    // Hotspot Crosshair Marker
-                                    if showHotspotMarker {
-                                        let hx = originX + currentFrame.hotspot.x * scale
-                                        let hy = originY + currentFrame.hotspot.y * scale
-
-                                        Circle()
-                                            .stroke(Color.red, lineWidth: 2)
-                                            .background(Circle().fill(Color.red.opacity(0.3)))
-                                            .frame(width: 14, height: 14)
-                                            .position(x: hx, y: hy)
-
-                                        // Crosshair Lines
-                                        Path { path in
-                                            path.move(to: CGPoint(x: hx - 12, y: hy))
-                                            path.addLine(to: CGPoint(x: hx + 12, y: hy))
-                                            path.move(to: CGPoint(x: hx, y: hy - 12))
-                                            path.addLine(to: CGPoint(x: hx, y: hy + 12))
-                                        }
-                                        .stroke(Color.red, lineWidth: 1.5)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .frame(width: 220, height: 220)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.secondary.opacity(0.25), lineWidth: 1)
-                    )
-
-                    // Control & Specs Panel
-                    VStack(alignment: .leading, spacing: 14) {
-                        Toggle(L10n.tr("show_hotspot_marker"), isOn: $showHotspotMarker)
-                            .font(.subheadline)
-
-                        Divider()
-
-                        // Animation playback controls
-                        if item.isAnimated && item.frames.count > 1 {
-                            VStack(alignment: .leading, spacing: 10) {
-                                HStack(spacing: 12) {
-                                    Button(action: togglePlayPause) {
-                                        Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                                            .frame(width: 24)
-                                    }
-                                    .buttonStyle(.borderedProminent)
-
-                                    Button(action: stepBackward) {
-                                        Image(systemName: "backward.frame.fill")
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .disabled(isPlaying)
-
-                                    Button(action: stepForward) {
-                                        Image(systemName: "forward.frame.fill")
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .disabled(isPlaying)
-
-                                    Text(L10n.tr("frame_step_label", currentFrameIndex + 1, item.frames.count))
-                                        .font(.subheadline)
-                                        .monospacedDigit()
-                                }
-
-                                HStack {
-                                    Text(L10n.tr("playback_speed", speedMultiplier))
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Slider(value: $speedMultiplier, in: 0.25...3.0, step: 0.25)
-                                        .onChange(of: speedMultiplier) { _, _ in
-                                            if isPlaying { restartAnimation() }
-                                        }
-                                }
-                            }
-
-                            Divider()
-                        }
-
-                        // Technical Specs Grid
-                        VStack(alignment: .leading, spacing: 6) {
-                            specRow(label: L10n.tr("spec_source_file"), value: item.sourceFileName)
-                            specRow(label: L10n.tr("spec_cursor_size"), value: L10n.tr("spec_cursor_size_val", Int(item.size.width), Int(item.size.height)))
-                            specRow(label: L10n.tr("spec_hotspot"), value: L10n.tr("spec_hotspot_val", Int(item.hotspot.x), Int(item.hotspot.y)))
-                            if item.isAnimated {
-                                specRow(label: L10n.tr("spec_frame_duration"), value: L10n.tr("spec_frame_duration_val", item.frameRate, Int(round(1.0 / max(0.001, item.frameRate)))))
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                // Filmstrip (for animated cursors)
-                if item.isAnimated && item.frames.count > 1 {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(L10n.tr("filmstrip_title", item.frames.count))
-                            .font(.headline)
-
-                        ScrollView(.horizontal, showsIndicators: true) {
+        if #available(macOS 14.0, *) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Header
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
                             HStack(spacing: 8) {
-                                ForEach(0..<item.frames.count, id: \.self) { idx in
-                                    let frame = item.frames[idx]
-                                    VStack(spacing: 4) {
-                                        ZStack {
-                                            RoundedRectangle(cornerRadius: 6)
-                                                .fill(Color(NSColor.controlBackgroundColor))
-                                                .frame(width: 44, height: 44)
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 6)
-                                                        .stroke(currentFrameIndex == idx ? Color.accentColor : Color.secondary.opacity(0.2), lineWidth: currentFrameIndex == idx ? 2 : 1)
-                                                )
-
-                                            Image(nsImage: frame.image)
-                                                .interpolation(.none)
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fit)
-                                                .frame(width: 28, height: 28)
+                                Text(item.name)
+                                    .font(.title2)
+                                    .bold()
+                                
+                                if item.isAnimated {
+                                    Text(L10n.tr("frames_count_badge", item.frames.count))
+                                        .font(.caption)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 3)
+                                        .background(Color.blue.opacity(0.15))
+                                        .foregroundColor(.blue)
+                                        .cornerRadius(6)
+                                }
+                            }
+                            
+                            Text(item.role.localizedName)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        // Background selector (hidden label removes unwanted '背景' text and prevents 160pt height inflation)
+                        Picker("", selection: $backgroundMode) {
+                            ForEach(BackgroundMode.allCases) { mode in
+                                Text(mode.displayName).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .frame(width: langManager.effectiveLanguageIsChinese ? 180 : 220)
+                        .id("bg_picker_\(langManager.selectedLanguageRaw)_\(langManager.effectiveLanguageIsChinese)")
+                    }
+                    
+                    // Magnified Visualizer
+                    HStack(alignment: .top, spacing: 20) {
+                        // Preview Box
+                        ZStack {
+                            // Background
+                            previewBackground
+                            
+                            // Cursor Image (Scaled)
+                            if let currentFrame = activeFrame {
+                                GeometryReader { geo in
+                                    let scale: CGFloat = 4.0
+                                    let drawW = currentFrame.size.width * scale
+                                    let drawH = currentFrame.size.height * scale
+                                    let originX = (geo.size.width - drawW) / 2
+                                    let originY = (geo.size.height - drawH) / 2
+                                    
+                                    ZStack(alignment: .topLeading) {
+                                        Image(nsImage: currentFrame.image)
+                                            .interpolation(.none)
+                                            .resizable()
+                                            .frame(width: drawW, height: drawH)
+                                            .offset(x: originX, y: originY)
+                                        
+                                        // Hotspot Crosshair Marker
+                                        if showHotspotMarker {
+                                            let hx = originX + currentFrame.hotspot.x * scale
+                                            let hy = originY + currentFrame.hotspot.y * scale
+                                            
+                                            Circle()
+                                                .stroke(Color.red, lineWidth: 2)
+                                                .background(Circle().fill(Color.red.opacity(0.3)))
+                                                .frame(width: 14, height: 14)
+                                                .position(x: hx, y: hy)
+                                            
+                                            // Crosshair Lines
+                                            Path { path in
+                                                path.move(to: CGPoint(x: hx - 12, y: hy))
+                                                path.addLine(to: CGPoint(x: hx + 12, y: hy))
+                                                path.move(to: CGPoint(x: hx, y: hy - 12))
+                                                path.addLine(to: CGPoint(x: hx, y: hy + 12))
+                                            }
+                                            .stroke(Color.red, lineWidth: 1.5)
                                         }
-
-                                        Text("#\(idx + 1)")
-                                            .font(.system(size: 10))
-                                            .foregroundColor(.secondary)
-                                    }
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        isPlaying = false
-                                        stopAnimation()
-                                        currentFrameIndex = idx
                                     }
                                 }
                             }
-                            .padding(.vertical, 4)
                         }
+                        .frame(width: 220, height: 220)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.secondary.opacity(0.25), lineWidth: 1)
+                        )
+                        
+                        // Control & Specs Panel
+                        VStack(alignment: .leading, spacing: 14) {
+                            Toggle(L10n.tr("show_hotspot_marker"), isOn: $showHotspotMarker)
+                                .font(.subheadline)
+                            
+                            Divider()
+                            
+                            // Animation playback controls
+                            if item.isAnimated && item.frames.count > 1 {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    HStack(spacing: 12) {
+                                        Button(action: togglePlayPause) {
+                                            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                                                .frame(width: 24)
+                                        }
+                                        .buttonStyle(.borderedProminent)
+                                        
+                                        Button(action: stepBackward) {
+                                            Image(systemName: "backward.frame.fill")
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .disabled(isPlaying)
+                                        
+                                        Button(action: stepForward) {
+                                            Image(systemName: "forward.frame.fill")
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .disabled(isPlaying)
+                                        
+                                        Text(L10n.tr("frame_step_label", currentFrameIndex + 1, item.frames.count))
+                                            .font(.subheadline)
+                                            .monospacedDigit()
+                                    }
+                                    
+                                    HStack {
+                                        Text(L10n.tr("playback_speed", speedMultiplier))
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        if #available(macOS 14.0, *) {
+                                            Slider(value: $speedMultiplier, in: 0.25...3.0, step: 0.25)
+                                                .onChange(of: speedMultiplier) { _, _ in
+                                                    if isPlaying { restartAnimation() }
+                                                }
+                                        } else {
+                                            // Fallback on earlier versions
+                                        }
+                                    }
+                                }
+                                
+                                Divider()
+                            }
+                            
+                            // Technical Specs Grid
+                            VStack(alignment: .leading, spacing: 6) {
+                                specRow(label: L10n.tr("spec_source_file"), value: item.sourceFileName)
+                                specRow(label: L10n.tr("spec_cursor_size"), value: L10n.tr("spec_cursor_size_val", Int(item.size.width), Int(item.size.height)))
+                                specRow(label: L10n.tr("spec_hotspot"), value: L10n.tr("spec_hotspot_val", Int(item.hotspot.x), Int(item.hotspot.y)))
+                                if item.isAnimated {
+                                    specRow(label: L10n.tr("spec_frame_duration"), value: L10n.tr("spec_frame_duration_val", item.frameRate, Int(round(1.0 / max(0.001, item.frameRate)))))
+                                }
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                }
-
-                // Mapped macOS Identifiers
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(L10n.tr("system_mappings_title"))
-                        .font(.headline)
-
-                    FlowLayout(spacing: 6) {
-                        ForEach(item.role.macIdentifiers, id: \.self) { ident in
-                            Text(ident)
-                                .font(.system(size: 11, design: .monospaced))
-                                .padding(.horizontal, 8)
+                    
+                    // Filmstrip (for animated cursors)
+                    if item.isAnimated && item.frames.count > 1 {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(L10n.tr("filmstrip_title", item.frames.count))
+                                .font(.headline)
+                            
+                            ScrollView(.horizontal, showsIndicators: true) {
+                                HStack(spacing: 8) {
+                                    ForEach(0..<item.frames.count, id: \.self) { idx in
+                                        let frame = item.frames[idx]
+                                        VStack(spacing: 4) {
+                                            ZStack {
+                                                RoundedRectangle(cornerRadius: 6)
+                                                    .fill(Color(NSColor.controlBackgroundColor))
+                                                    .frame(width: 44, height: 44)
+                                                    .overlay(
+                                                        RoundedRectangle(cornerRadius: 6)
+                                                            .stroke(currentFrameIndex == idx ? Color.accentColor : Color.secondary.opacity(0.2), lineWidth: currentFrameIndex == idx ? 2 : 1)
+                                                    )
+                                                
+                                                Image(nsImage: frame.image)
+                                                    .interpolation(.none)
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fit)
+                                                    .frame(width: 28, height: 28)
+                                            }
+                                            
+                                            Text("#\(idx + 1)")
+                                                .font(.system(size: 10))
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            isPlaying = false
+                                            stopAnimation()
+                                            currentFrameIndex = idx
+                                        }
+                                    }
+                                }
                                 .padding(.vertical, 4)
-                                .background(Color(NSColor.controlBackgroundColor))
-                                .cornerRadius(6)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
-                                )
+                            }
                         }
                     }
+                    
+                    // Mapped macOS Identifiers
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(L10n.tr("system_mappings_title"))
+                            .font(.headline)
+                        
+                        FlowLayout(spacing: 6) {
+                            ForEach(item.role.macIdentifiers, id: \.self) { ident in
+                                Text(ident)
+                                    .font(.system(size: 11, design: .monospaced))
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color(NSColor.controlBackgroundColor))
+                                    .cornerRadius(6)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                                    )
+                            }
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    // Interactive Playground
+                    CursorPlaygroundView(item: item)
                 }
-
-                Divider()
-
-                // Interactive Playground
-                CursorPlaygroundView(item: item)
+                .padding(20)
             }
-            .padding(20)
-        }
-        .onAppear {
-            currentFrameIndex = 0
-            if isPlaying { restartAnimation() }
-        }
-        .onDisappear {
-            stopAnimation()
-        }
-        .onChange(of: item.id) { _, _ in
-            currentFrameIndex = 0
-            if isPlaying { restartAnimation() }
+            .onAppear {
+                currentFrameIndex = 0
+                if isPlaying { restartAnimation() }
+            }
+            .onDisappear {
+                stopAnimation()
+            }
+            .onChange(of: item.id) { _, _ in
+                currentFrameIndex = 0
+                if isPlaying { restartAnimation() }
+            }
+        } else {
+            // Fallback on earlier versions
         }
     }
 

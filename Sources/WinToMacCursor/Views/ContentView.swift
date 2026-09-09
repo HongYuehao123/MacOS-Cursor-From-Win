@@ -15,30 +15,34 @@ public struct ContentView: View {
     public init() {}
 
     public var body: some View {
-        NavigationSplitView {
-            sidebarView
-        } content: {
-            cursorListView
-        } detail: {
-            cursorDetailView
-        }
-        .navigationTitle(L10n.tr("app_title"))
-        .frame(minWidth: 960, minHeight: 620)
-        .toolbar {
-            toolbarItems
-        }
-        .overlay(alignment: .top) {
-            if let msg = statusMessage {
-                toastView(message: msg, isError: false)
-            } else if let err = errorMessage {
-                toastView(message: err, isError: true)
+        if #available(macOS 14.0, *) {
+            NavigationSplitView {
+                sidebarView
+            } content: {
+                cursorListView
+            } detail: {
+                cursorDetailView
             }
-        }
-        .onAppear {
-            langManager.updateAllWindowsTitle()
-        }
-        .onChange(of: langManager.selectedLanguageRaw) { _, _ in
-            langManager.updateAllWindowsTitle()
+            .navigationTitle(L10n.tr("app_title"))
+            .frame(minWidth: 1387, minHeight: 897)
+            .toolbar {
+                toolbarItems
+            }
+            .overlay(alignment: .top) {
+                if let msg = statusMessage {
+                    toastView(message: msg, isError: false)
+                } else if let err = errorMessage {
+                    toastView(message: err, isError: true)
+                }
+            }
+            .onAppear {
+                langManager.updateAllWindowsTitle()
+            }
+            .onChange(of: langManager.selectedLanguageRaw) { _, _ in
+                langManager.updateAllWindowsTitle()
+            }
+        } else {
+            // Fallback on earlier versions
         }
     }
 

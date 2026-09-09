@@ -11,6 +11,7 @@ struct WinToMacCursorApp: App {
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
+        .defaultSize(width: 1387, height: 897)
         .commands {
             SidebarCommands()
         }
