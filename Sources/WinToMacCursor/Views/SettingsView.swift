@@ -81,7 +81,7 @@ public struct SettingsView: View {
                     .font(.title2)
                     .fontWeight(.bold)
 
-                let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.1.1"
+                let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.1.2"
                 let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
                 Text(String(format: L10n.tr("settings_version_label"), appVersion, buildVersion))
                     .font(.subheadline)

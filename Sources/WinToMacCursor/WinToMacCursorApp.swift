@@ -6,7 +6,7 @@ struct WinToMacCursorApp: App {
     @ObservedObject private var langManager = LanguageManager.shared
 
     var body: some Scene {
-        WindowGroup(L10n.tr("app_title")) {
+        WindowGroup(L10n.tr("app_title"), id: "main") {
             ContentView()
         }
         .windowStyle(.titleBar)

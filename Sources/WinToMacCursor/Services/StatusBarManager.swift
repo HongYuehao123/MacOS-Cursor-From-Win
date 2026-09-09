@@ -7,6 +7,10 @@ public final class StatusBarManager: NSObject, NSMenuDelegate {
     private var statusItem: NSStatusItem?
     private let menu = NSMenu()
 
+    // Captured SwiftUI window actions to bridge AppKit to SwiftUI windowing
+    public var openMainWindow: (() -> Void)?
+    public var openSettingsWindow: (() -> Void)?
+
     private override init() {
         super.init()
     }
@@ -170,6 +174,12 @@ public final class StatusBarManager: NSObject, NSMenuDelegate {
 
     public func showSettings() {
         NSApp.activate(ignoringOtherApps: true)
+        
+        if let openSettingsAction = openSettingsWindow {
+            openSettingsAction()
+            return
+        }
+        
         let success = NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
         if !success {
             _ = NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
@@ -189,8 +199,10 @@ public final class StatusBarManager: NSObject, NSMenuDelegate {
             }
         }
 
-        // If closed or unmapped, order front any window
-        if let first = NSApp.windows.first(where: { $0.canBecomeKey }) {
+        // If closed or unmapped, try to reopen using captured SwiftUI openWindow action
+        if let openAction = openMainWindow {
+            openAction()
+        } else if let first = NSApp.windows.first(where: { $0.canBecomeKey }) {
             first.makeKeyAndOrderFront(nil)
         }
     }

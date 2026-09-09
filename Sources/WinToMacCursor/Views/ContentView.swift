@@ -3,6 +3,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 public struct ContentView: View {
+    @Environment(\.openWindow) private var openWindow
     @StateObject private var cursorManager = SystemCursorManager.shared
     @ObservedObject private var libraryManager = SchemeLibraryManager.shared
     @ObservedObject private var langManager = LanguageManager.shared
@@ -35,8 +36,14 @@ public struct ContentView: View {
                     toastView(message: err, isError: true)
                 }
             }
+            .background {
+                SettingsBridgeView()
+            }
             .onAppear {
                 langManager.updateAllWindowsTitle()
+                StatusBarManager.shared.openMainWindow = { [openWindow] in
+                    openWindow(id: "main")
+                }
             }
             .onChange(of: langManager.selectedLanguageRaw) { _, _ in
                 langManager.updateAllWindowsTitle()
@@ -383,3 +390,18 @@ public struct ContentView: View {
         .animation(.easeInOut, value: message)
     }
 }
+@available(macOS 14.0, *)
+struct SettingsBridgeView: View {
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        Color.clear
+            .frame(width: 0, height: 0)
+            .onAppear {
+                StatusBarManager.shared.openSettingsWindow = {
+                    openSettings()
+                }
+            }
+    }
+}
+
