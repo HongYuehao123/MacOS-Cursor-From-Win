@@ -54,11 +54,22 @@ public final class SystemCursorManager: ObservableObject {
            FileManager.default.fileExists(atPath: resURL.path) {
             return resURL
         }
-        // 2. Fallback to project Resources during development or testing
-        let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-        let devURL = cwd.appendingPathComponent("Resources/DefaultMacCursor.cape")
+        // 2. Fallback using compile-time source file path to find the repository root during development/testing
+        let sourceFile = URL(fileURLWithPath: #filePath)
+        let projectRoot = sourceFile
+            .deletingLastPathComponent() // Services/
+            .deletingLastPathComponent() // WinToMacCursor/
+            .deletingLastPathComponent() // Sources/
+            .deletingLastPathComponent() // ProjectRoot/
+        let devURL = projectRoot.appendingPathComponent("Resources/DefaultMacCursor.cape")
         if FileManager.default.fileExists(atPath: devURL.path) {
             return devURL
+        }
+        // 3. Fallback to current working directory
+        let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        let cwdURL = cwd.appendingPathComponent("Resources/DefaultMacCursor.cape")
+        if FileManager.default.fileExists(atPath: cwdURL.path) {
+            return cwdURL
         }
         return nil
     }
