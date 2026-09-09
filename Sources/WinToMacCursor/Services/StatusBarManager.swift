@@ -21,12 +21,20 @@ public final class StatusBarManager: NSObject, NSMenuDelegate {
         // Create status bar item in macOS menu bar
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = item.button {
+            var iconLoaded = false
             if let image = NSImage(systemSymbolName: "cursorarrow.motionlines", accessibilityDescription: "WinToMacCursor") {
                 image.isTemplate = true
                 button.image = image
+                iconLoaded = true
             } else if let image = NSImage(systemSymbolName: "cursorarrow", accessibilityDescription: "WinToMacCursor") {
                 image.isTemplate = true
                 button.image = image
+                iconLoaded = true
+            }
+            
+            if !iconLoaded {
+                // Robust emoji icon fallback so the status bar item is never invisible (0 width)
+                button.title = "🖱️"
             }
             button.toolTip = L10n.tr("status_bar_tooltip")
         }
