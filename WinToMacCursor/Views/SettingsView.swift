@@ -54,7 +54,7 @@ public struct SettingsView: View {
 
             // 2. System Launch & Dock Section
             Section {
-                Toggle("开机自动启动", isOn: $launchAtLogin)
+                Toggle(L10n.tr("settings_auto_open"), isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { newValue in
                         updateLaunchAtLogin(enabled: newValue)
                     }
@@ -85,7 +85,7 @@ public struct SettingsView: View {
     private var cursorTab: some View {
         Form {
             Section {
-                Picker("激活的光标方案：", selection: $libraryManager.selectedSchemeIndex) {
+                Picker(L10n.tr("cursor_activated"), selection: $libraryManager.selectedSchemeIndex) {
                     ForEach(libraryManager.schemes.indices, id: \.self) { idx in
                         let scheme = libraryManager.schemes[idx]
                         Text(scheme.name).tag(idx)
@@ -100,23 +100,23 @@ public struct SettingsView: View {
                 }
 
                 HStack {
-                    Text("当前系统光标状态：")
+                    Text(L10n.tr("cursor_status"))
                     Spacer()
                     if cursorManager.isCustomApplied {
                         Text(cursorManager.lastAppliedSchemeName ?? "已自定义")
                             .foregroundColor(.accentColor)
                             .bold()
                     } else {
-                        Text("系统原生默认")
+                        Text(L10n.tr("cursor_default_text"))
                             .foregroundColor(.secondary)
                     }
                 }
 
-                Button("一键还原为系统默认光标") {
+                Button(L10n.tr("cursor_reset_inScheme")) {
                     cursorManager.restoreDefaults()
                 }
             } header: {
-                Text("方案管理")
+                Text(L10n.tr("cursor_theme_management"))
             }
         }
         .formStyle(.grouped)
@@ -139,8 +139,8 @@ public struct SettingsView: View {
                     .font(.title2)
                     .fontWeight(.bold)
 
-                let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.0"
-                let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+                let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.1"
+                let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "2"
                 Text(String(format: L10n.tr("settings_version_label"), appVersion, buildVersion))
                     .font(.subheadline)
                     .foregroundColor(.secondary)

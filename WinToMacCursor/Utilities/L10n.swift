@@ -194,6 +194,14 @@ public struct L10n {
         "settings_about_section": "About",
         "settings_version_label": "Version %@ (%@)",
         "settings_about_description": "A native macOS utility to convert and manage Windows .cur and .ani cursor themes.",
+        "settings_auto_open": "Open At Login",
+        
+        // Cursor Schemes
+        "cursor_theme_management": "Schemes Management",
+        "cursor_activated": "Activated Cursor Scheme",
+        "cursor_status": "Current Cursor Status",
+        "cursor_default_text": "System Defaults",
+        "cursor_reset_inScheme": "Restore System Defaults",
 
         // Roles
         "role_arrow": "Normal Select",
@@ -329,6 +337,14 @@ public struct L10n {
         "settings_about_section": "关于",
         "settings_version_label": "版本 %@ (%@)",
         "settings_about_description": "专为 macOS 打造的原生 Windows .cur 与 .ani 光标转换与管理器。",
+        "settings_auto_open": "开机自动启动",
+        
+        // Cursor Schemes
+        "cursor_theme_management": "方案管理",
+        "cursor_activated": "激活的光标方案",
+        "cursor_status": "当前系统光标状态",
+        "cursor_default_text": "系统原生默认",
+        "cursor_reset_inScheme": "还原为系统默认光标",
 
         // Roles
         "role_arrow": "正常选择 (Normal)",
