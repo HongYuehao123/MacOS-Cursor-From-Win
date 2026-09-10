@@ -50,7 +50,7 @@ public enum CursorRole: String, CaseIterable, Identifiable, Sendable {
     public var macIdentifiers: [String] {
         switch self {
         case .arrow:
-            return ["com.apple.coregraphics.Arrow", "com.apple.cursor.0", "com.apple.coregraphics.ArrowS"]
+            return ["com.apple.coregraphics.Arrow", "com.apple.cursor.0", "com.apple.coregraphics.ArrowS", "com.apple.coregraphics.ArrowCtx"]
         case .help:
             return ["com.apple.cursor.40"]
         case .working:
@@ -58,27 +58,44 @@ public enum CursorRole: String, CaseIterable, Identifiable, Sendable {
         case .busy:
             return ["com.apple.coregraphics.Wait", "com.apple.cursor.4"]
         case .precision:
-            return ["com.apple.cursor.7", "com.apple.cursor.8"]
+            return [
+                "com.apple.coregraphics.Crosshair",
+                "com.apple.cursor.1",
+                "com.apple.coregraphics.Cross",
+                "com.apple.cursor.cross",
+                "com.apple.cursor.crosshair",
+                "com.apple.coregraphics.ScreenshotSelection",
+                "com.apple.cursor.screenshotselection",
+                "screenshotselection",
+                "cross"
+            ]
         case .text:
-            return ["com.apple.coregraphics.IBeam", "com.apple.cursor.1", "com.apple.coregraphics.IBeamS"]
+            return [
+                "com.apple.coregraphics.IBeam",
+                "com.apple.coregraphics.IBeamS",
+                "com.apple.coregraphics.IBeamXOR",
+                "com.apple.coregraphics.IBeamVertical",
+                "com.apple.cursor.2",
+                "com.apple.cursor.25"
+            ]
         case .handwriting:
             return ["com.apple.cursor.10"]
         case .unavailable:
             return ["com.apple.cursor.3"]
         case .vertical:
-            return ["com.apple.cursor.23", "com.apple.cursor.32"]
+            return ["com.apple.cursor.23", "com.apple.cursor.24", "com.apple.cursor.32", "com.apple.cursor.33"]
         case .horizontal:
-            return ["com.apple.cursor.19", "com.apple.cursor.28"]
+            return ["com.apple.cursor.19", "com.apple.cursor.20", "com.apple.cursor.28", "com.apple.cursor.29"]
         case .diagonal1:
-            return ["com.apple.cursor.34"]
+            return ["com.apple.cursor.34", "com.apple.cursor.35"]
         case .diagonal2:
-            return ["com.apple.cursor.30"]
+            return ["com.apple.cursor.30", "com.apple.cursor.31"]
         case .move:
-            return ["com.apple.coregraphics.Move"]
+            return ["com.apple.coregraphics.Move", "com.apple.coregraphics.Copy", "com.apple.coregraphics.Alias", "com.apple.cursor.5", "com.apple.cursor.6", "com.apple.cursor.7"]
         case .alternate:
             return ["com.apple.cursor.21", "com.apple.cursor.22"]
         case .link:
-            return ["com.apple.cursor.2", "com.apple.cursor.13"]
+            return ["com.apple.coregraphics.PointingHand", "com.apple.cursor.13"]
         case .person:
             return ["com.apple.cursor.9"]
         case .pin:
@@ -94,7 +111,7 @@ public enum CursorRole: String, CaseIterable, Identifiable, Sendable {
         if name.contains("help") { return .help }
         if name.contains("working") || name.contains("appstarting") { return .working }
         if name.contains("busy") || name.contains("wait") { return .busy }
-        if name.contains("precision") || name.contains("cross") { return .precision }
+        if name.contains("precision") || name.contains("cross") || name.contains("screenshot") || name.contains("snipping") || name.contains("capture") { return .precision }
         if name.contains("text") || name.contains("ibeam") { return .text }
         if name.contains("handwriting") || name.contains("pen") { return .handwriting }
         if name.contains("unavailable") || name.contains("no") || name.contains("forbidden") { return .unavailable }

@@ -40,11 +40,17 @@ public final class SystemCursorManager: ObservableObject {
         UnsafeMutablePointer<CGFloat>,
         UnsafeMutablePointer<Unmanaged<CFArray>?>
     ) -> Int32)?
+    private var cursorConnectionID: CGSConnectionID?
+    private var cgsNewConnectionFn: (@convention(c) (UnsafeMutableRawPointer?, UnsafeMutablePointer<CGSConnectionID>) -> Int32)?
+    private var cgsReleaseConnectionFn: (@convention(c) (CGSConnectionID) -> Int32)?
     private var cgsRemoveRegisteredCursorFn: (@convention(c) (
         CGSConnectionID,
         UnsafePointer<CChar>
     ) -> Int32)?
-    private var coreCursorUnregisterAllFn: (@convention(c) () -> Int32)?
+    private var cgsGetCursorScaleFn: (@convention(c) (CGSConnectionID, UnsafeMutablePointer<Float>) -> Int32)?
+    private var cgsSetCursorScaleFn: (@convention(c) (CGSConnectionID, Float) -> Int32)?
+    private var coreCursorUnregisterAllFn: (@convention(c) (CGSConnectionID) -> Int32)?
+    private var observers: [NSObjectProtocol] = []
 
     public var defaultMacCursorCapeURL: URL? {
         // 1. App Bundle Resources
@@ -55,22 +61,24 @@ public final class SystemCursorManager: ObservableObject {
            FileManager.default.fileExists(atPath: resURL.path) {
             return resURL
         }
-        // 2. Fallback using compile-time source file path to find the repository root during development/testing
+        // 2. Fallback relative to source file (WinToMacCursor/DefaultMacCursor.cape)
         let sourceFile = URL(fileURLWithPath: #filePath)
-        let projectRoot = sourceFile
-            .deletingLastPathComponent() // Services/
-            .deletingLastPathComponent() // WinToMacCursor/
-            .deletingLastPathComponent() // Sources/
-            .deletingLastPathComponent() // ProjectRoot/
-        let devURL = projectRoot.appendingPathComponent("Resources/DefaultMacCursor.cape")
-        if FileManager.default.fileExists(atPath: devURL.path) {
-            return devURL
+        let moduleDir = sourceFile.deletingLastPathComponent().deletingLastPathComponent()
+        let moduleCape = moduleDir.appendingPathComponent("DefaultMacCursor.cape")
+        if FileManager.default.fileExists(atPath: moduleCape.path) {
+            return moduleCape
         }
-        // 3. Fallback to current working directory
+        // 3. Fallback relative to workspace root / current working directory
         let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-        let cwdURL = cwd.appendingPathComponent("Resources/DefaultMacCursor.cape")
-        if FileManager.default.fileExists(atPath: cwdURL.path) {
-            return cwdURL
+        let candidatePaths = [
+            cwd.appendingPathComponent("WinToMacCursor/DefaultMacCursor.cape"),
+            cwd.appendingPathComponent("DefaultMacCursor.cape"),
+            cwd.appendingPathComponent("Resources/DefaultMacCursor.cape")
+        ]
+        for path in candidatePaths {
+            if FileManager.default.fileExists(atPath: path.path) {
+                return path
+            }
         }
         return nil
     }
@@ -95,12 +103,46 @@ public final class SystemCursorManager: ObservableObject {
     private init() {
         loadFrameworkSymbols()
         cleanupCorruptedBackupsIfNeeded()
+        setupLifecycleObservers()
 
         // Restore previously applied state from UserDefaults
         if let savedScheme = UserDefaults.standard.string(forKey: "WinToMacCursor_AppliedScheme") {
             self.isCustomApplied = true
             self.lastAppliedSchemeName = savedScheme
         }
+    }
+
+    private func setupLifecycleObservers() {
+        let wsCenter = NSWorkspace.shared.notificationCenter
+        observers.append(wsCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.handleSystemWake()
+        })
+        observers.append(wsCenter.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.handleSystemWake()
+        })
+        observers.append(NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.handleSystemWake()
+        })
+    }
+
+    private func handleSystemWake() {
+        guard isCustomApplied, let schemeName = lastAppliedSchemeName else { return }
+        if let activeScheme = SchemeLibraryManager.shared.schemes.first(where: { $0.name == schemeName }) {
+            NSLog("[SystemCursorManager] Re-applying scheme after system wake/display change: %@", schemeName)
+            _ = applyScheme(activeScheme)
+        }
+    }
+
+    deinit {
+        if let cid = cursorConnectionID {
+            _ = cgsReleaseConnectionFn?(cid)
+            cursorConnectionID = nil
+        }
+        for obs in observers {
+            NotificationCenter.default.removeObserver(obs)
+            NSWorkspace.shared.notificationCenter.removeObserver(obs)
+        }
+        observers.removeAll()
     }
 
     private func cleanupCorruptedBackupsIfNeeded() {
@@ -117,6 +159,12 @@ public final class SystemCursorManager: ObservableObject {
 
             if let ptr = dlsym(handle, "CGSMainConnectionID") {
                 self.cgsMainConnectionIDFn = unsafeBitCast(ptr, to: (@convention(c) () -> CGSConnectionID).self)
+            }
+            if let ptr = dlsym(handle, "CGSNewConnection") {
+                self.cgsNewConnectionFn = unsafeBitCast(ptr, to: (@convention(c) (UnsafeMutableRawPointer?, UnsafeMutablePointer<CGSConnectionID>) -> Int32).self)
+            }
+            if let ptr = dlsym(handle, "CGSReleaseConnection") {
+                self.cgsReleaseConnectionFn = unsafeBitCast(ptr, to: (@convention(c) (CGSConnectionID) -> Int32).self)
             }
             if let ptr = dlsym(handle, "CGSRegisterCursorWithImages") {
                 self.cgsRegisterCursorWithImagesFn = unsafeBitCast(ptr, to: (@convention(c) (
@@ -156,13 +204,19 @@ public final class SystemCursorManager: ObservableObject {
                     UnsafePointer<CChar>
                 ) -> Int32).self)
             }
+            if let ptr = dlsym(handle, "CGSGetCursorScale") {
+                self.cgsGetCursorScaleFn = unsafeBitCast(ptr, to: (@convention(c) (CGSConnectionID, UnsafeMutablePointer<Float>) -> Int32).self)
+            }
+            if let ptr = dlsym(handle, "CGSSetCursorScale") {
+                self.cgsSetCursorScaleFn = unsafeBitCast(ptr, to: (@convention(c) (CGSConnectionID, Float) -> Int32).self)
+            }
         }
 
         // 2. ApplicationServices.framework for system-wide CoreCursorUnregisterAll
         if let handle = dlopen("/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices", RTLD_LAZY) {
             self.asHandle = handle
             if let ptr = dlsym(handle, "CoreCursorUnregisterAll") {
-                self.coreCursorUnregisterAllFn = unsafeBitCast(ptr, to: (@convention(c) () -> Int32).self)
+                self.coreCursorUnregisterAllFn = unsafeBitCast(ptr, to: (@convention(c) (CGSConnectionID) -> Int32).self)
             }
         }
     }
@@ -179,10 +233,49 @@ public final class SystemCursorManager: ObservableObject {
 
     // MARK: - Cursor Operations
 
+    public func triggerCursorRedraw() {
+        guard let cid = connectionID else { return }
+        var currentScale: Float = 1.0
+        if let getScale = cgsGetCursorScaleFn, let setScale = cgsSetCursorScaleFn {
+            if getScale(cid, &currentScale) == 0 {
+                _ = setScale(cid, currentScale + 0.05)
+                _ = setScale(cid, currentScale)
+            }
+        }
+        NSCursor.unhide()
+
+        // Synthesize a pair of micro mouseMoved CGEvents to force WindowServer
+        // and foreground apps (e.g. Word, Safari, Notes) to update their cursor rects immediately
+        if let event = CGEvent(source: nil) {
+            let loc = event.location
+            let move1 = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: CGPoint(x: loc.x + 1, y: loc.y), mouseButton: .left)
+            let move2 = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: loc, mouseButton: .left)
+            move1?.post(tap: .cghidEventTap)
+            move2?.post(tap: .cghidEventTap)
+        }
+    }
+
     @discardableResult
     public func applyScheme(_ scheme: CursorScheme) -> (success: Int, total: Int) {
-        guard isAvailable, let cid = connectionID, let registerFn = cgsRegisterCursorWithImagesFn, let activateFn = cgsSetRegisteredCursorFn else {
+        guard isAvailable, let registerFn = cgsRegisterCursorWithImagesFn else {
             NSLog("[SystemCursorManager] Required SkyLight APIs not available")
+            return (0, 0)
+        }
+
+        // Release previous dedicated cursor connection if one exists
+        if let oldCid = cursorConnectionID {
+            _ = cgsReleaseConnectionFn?(oldCid)
+            cursorConnectionID = nil
+        }
+
+        // Create a new dedicated connection to register custom cursors
+        var targetCid: CGSConnectionID = 0
+        if let newConn = cgsNewConnectionFn, newConn(nil, &targetCid) == 0 {
+            self.cursorConnectionID = targetCid
+        } else if let mainCid = connectionID {
+            targetCid = mainCid
+        } else {
+            NSLog("[SystemCursorManager] Failed to obtain CGS connection")
             return (0, 0)
         }
 
@@ -226,7 +319,7 @@ public final class SystemCursorManager: ObservableObject {
 
                 var seed: Int32 = 0
                 let regErr = registerFn(
-                    cid,
+                    targetCid,
                     ident,
                     true,
                     true,
@@ -239,8 +332,6 @@ public final class SystemCursorManager: ObservableObject {
                 )
 
                 if regErr == 0 {
-                    var actSeed: Int32 = seed
-                    let _ = activateFn(cid, ident, &actSeed)
                     successCount += 1
                 } else {
                     NSLog("[SystemCursorManager] Failed to register %s, err: %d", ident, regErr)
@@ -253,8 +344,7 @@ public final class SystemCursorManager: ObservableObject {
         DispatchQueue.main.async {
             self.isCustomApplied = (successCount > 0)
             self.lastAppliedSchemeName = scheme.name
-            NSCursor.unhide()
-            NSCursor.arrow.set()
+            self.triggerCursorRedraw()
         }
 
         return (successCount, totalCount)
@@ -264,34 +354,28 @@ public final class SystemCursorManager: ObservableObject {
     public func restoreDefaults() -> Bool {
         var didRestore = false
 
-        // 1. Call CoreCursorUnregisterAll to unregister all custom overrides from WindowServer
-        if let unregisterAll = coreCursorUnregisterAllFn {
-            let ret = unregisterAll()
-            if ret == 0 {
-                didRestore = true
-                NSLog("[SystemCursorManager] CoreCursorUnregisterAll succeeded (ret: 0)")
-            } else {
-                NSLog("[SystemCursorManager] CoreCursorUnregisterAll returned %d", ret)
-            }
+        // 1. Release dedicated cursor connection if active
+        if let cid = cursorConnectionID {
+            let _ = cgsReleaseConnectionFn?(cid)
+            cursorConnectionID = nil
         }
 
-        // 2. Also remove registered custom cursors per identifier using CGSRemoveRegisteredCursor
-        if let cid = connectionID, let removeFn = cgsRemoveRegisteredCursorFn {
-            for role in CursorRole.allCases {
-                for ident in role.macIdentifiers {
-                    let _ = removeFn(cid, ident)
-                }
-            }
+        // 2. Safety fallback: unregister CoreCursor
+        if let mainCid = connectionID, let unregisterAll = coreCursorUnregisterAllFn {
+            _ = unregisterAll(mainCid)
         }
 
-        // 3. Register authentic Apple macOS default cursors from bundled DefaultMacCursor.cape
+        // 3. Forcibly overwrite custom cursors using authentic Apple macOS assets from DefaultMacCursor.cape
+        // This instantly and deterministically restores Arrow, IBeam, Resize, and tools across all applications
+        // without seed conflicts or disappearing cursors.
         if let capeURL = defaultMacCursorCapeURL,
            let data = try? Data(contentsOf: capeURL),
            let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
            let cursors = plist["Cursors"] as? [String: [String: Any]],
            let cid = connectionID,
-           let registerFn = cgsRegisterCursorWithImagesFn,
-           let activateFn = cgsSetRegisteredCursorFn {
+           let registerFn = cgsRegisterCursorWithImagesFn {
+            
+            var restoredCount = 0
             for (ident, dict) in cursors {
                 let frameCount = dict["FrameCount"] as? Int ?? 1
                 let frameDuration = dict["FrameDuration"] as? Double ?? 0.0
@@ -324,25 +408,28 @@ public final class SystemCursorManager: ObservableObject {
                     &seed
                 )
                 if regErr == 0 {
-                    var actSeed: Int32 = seed
-                    let _ = activateFn(cid, ident, &actSeed)
-                    didRestore = true
+                    restoredCount += 1
                 }
             }
-            NSLog("[SystemCursorManager] Restored system defaults using DefaultMacCursor.cape")
+            NSLog("[SystemCursorManager] Restored %d default cursors from DefaultMacCursor.cape", restoredCount)
+            if restoredCount > 0 {
+                didRestore = true
+            }
         }
 
-        // 4. Force system cursor redraw & clear persisted applied state and legacy corrupted cache
+        // 4. Hot-refresh WindowServer cursor cache using CGSSetCursorScale and synthetic mouse movement
+        triggerCursorRedraw()
+        didRestore = true
+
+        // 5. Clear persisted applied state and legacy corrupted cache
         cleanupCorruptedBackupsIfNeeded()
         UserDefaults.standard.removeObject(forKey: "WinToMacCursor_AppliedScheme")
 
         DispatchQueue.main.async {
             self.isCustomApplied = false
             self.lastAppliedSchemeName = nil
-            NSCursor.unhide()
-            NSCursor.arrow.set()
         }
 
-        return didRestore || coreCursorUnregisterAllFn != nil
+        return didRestore
     }
 }
